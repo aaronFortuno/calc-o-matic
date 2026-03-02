@@ -111,6 +111,27 @@
     "unknown":      "An unknown error occurred."
   },
 
+  "levels": {
+    "tutorial1": {
+      "name":        "Tutorial 1 — Conveyor Basics",
+      "description": "Connect the Extractor to the Receiver using Conveyors."
+    },
+    "tutorial2": {
+      "name":        "Tutorial 2 — ADD Operator",
+      "description": "Combine two numbers using the ADD operator."
+    },
+    "procedural":   "Puzzle #{{seed}} (D{{difficulty}})",
+    "noLevel":      "No level loaded"
+  },
+
+  "levelComplete": {
+    "title":        "Level Complete!",
+    "xpAwarded":    "+{{xp}} XP earned",
+    "nextLevel":    "Next Level",
+    "replay":       "Replay",
+    "backToMenu":   "Continue"
+  },
+
   "common": {
     "close": "Close",
     "ok":    "OK",

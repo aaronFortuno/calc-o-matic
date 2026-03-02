@@ -9,14 +9,17 @@ import { usePlayerStore } from '../store/playerStore'
 
 export function HUD() {
   const { t } = useTranslation()
-  const objectives = useWorldStore(s => s.objectives)
-  const tickCount  = useWorldStore(s => s.world.tickCount)
-  const tickRate   = useWorldStore(s => s.tickRate)
-  const running    = useWorldStore(s => s.running)
-  const startSim   = useWorldStore(s => s.startSim)
-  const stopSim    = useWorldStore(s => s.stopSim)
-  const resetSim   = useWorldStore(s => s.resetSim)
-  const setTickRate= useWorldStore(s => s.setTickRate)
+  const objectives       = useWorldStore(s => s.objectives)
+  const tickCount        = useWorldStore(s => s.world.tickCount)
+  const tickRate         = useWorldStore(s => s.tickRate)
+  const running          = useWorldStore(s => s.running)
+  const startSim         = useWorldStore(s => s.startSim)
+  const stopSim          = useWorldStore(s => s.stopSim)
+  const resetSim         = useWorldStore(s => s.resetSim)
+  const setTickRate      = useWorldStore(s => s.setTickRate)
+  const currentLevelName = useWorldStore(s => s.currentLevelName)
+  const seed             = useWorldStore(s => s.seed)
+  const difficulty       = useWorldStore(s => s.difficulty)
 
   const xp    = usePlayerStore(s => s.xp)
   const level = usePlayerStore(s => s.level)
@@ -27,6 +30,15 @@ export function HUD() {
 
   return (
     <header className="absolute top-0 left-16 right-0 h-14 bg-gray-900 border-b border-gray-700 flex items-center px-4 gap-4 z-10">
+
+      {/* Level name */}
+      <div className="flex-shrink-0 text-sm font-semibold text-indigo-300 whitespace-nowrap border-r border-gray-700 pr-3">
+        {currentLevelName
+          ? (currentLevelName === 'levels.procedural'
+              ? t(currentLevelName, { seed, difficulty })
+              : t(currentLevelName))
+          : t('levels.noLevel')}
+      </div>
 
       {/* Objectives */}
       <div className="flex gap-3 flex-1 overflow-x-auto">

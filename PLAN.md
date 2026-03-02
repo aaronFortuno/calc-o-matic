@@ -78,12 +78,20 @@ Build a Beltmatic-inspired browser-only educational math puzzle game (MVP) using
 
 ---
 
-## Phase 6 — Game Logic: Levels & Progression
-- [ ] Tutorial Level 1: extractor(2) → conveyor → receiver(2), deliver 3 tokens
-- [ ] Tutorial Level 2 (ADD): extractor(1) + extractor(3) → ADD → receiver(4)
-- [ ] Procedurally generated Level 3+
-- [ ] Progression system: XP award on objective completion; operator unlock thresholds
-- [ ] Persistent player profile in localStorage: `unlockedOperators`, `completedLevels`, `bestScores`
+## Phase 6 — Game Logic: Levels & Progression ✅
+- [x] `src/engine/procedural/tutorials.ts` — Hardcoded tutorial level definitions + `LevelEntry` catalog type + `getLevelCatalog()`
+- [x] Tutorial Level 1: extractor(2) → conveyor → conveyor → receiver(2, ×3)
+- [x] Tutorial Level 2 (ADD): extractor(1) + extractor(3) → ADD → receiver(4, ×3)
+- [x] Procedurally generated Level 3+ via `nextLevel()` auto-advance (increments seed/difficulty)
+- [x] Progression system: XP awarded on each objective completion (25 XP each); operator unlock thresholds enforced via `playerStore`
+- [x] Persistent player profile in localStorage: `unlockedOperators`, `completedLevels` (via Zustand persist in `playerStore`)
+- [x] Level progression in `worldStore`: `currentLevelId`, `currentLevelName`, `levelComplete`, `levelCatalog`; actions `loadCatalogLevel`, `nextLevel`, `dismissLevelComplete`
+- [x] `_onTick` callback detects newly completed objectives, awards XP, auto-stops sim and marks level complete when all objectives done
+- [x] `src/components/LevelCompleteModal.tsx` — Modal shown on level completion with XP earned, Next Level / Replay / Continue buttons
+- [x] HUD updated with current level name display
+- [x] App auto-loads Tutorial Level 1 on first mount
+- [x] i18n strings added: `levels.*`, `levelComplete.*`
+- [x] Verified: `npm run build` passes with zero TypeScript errors
 
 ---
 
