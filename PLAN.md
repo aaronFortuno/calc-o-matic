@@ -38,13 +38,13 @@ Build a Beltmatic-inspired browser-only educational math puzzle game (MVP) using
 
 ---
 
-## Phase 2 — Entities
-- [ ] `src/engine/entities/extractor.ts` — produces numeric tokens periodically
-- [ ] `src/engine/entities/conveyor.ts` — moves tokens directionally, handles merges (first-in wins)
-- [ ] `src/engine/entities/operator.ts` — base class + implementations:
-  - Basic (unlocked initially): `AddOperator`, `SubOperator`, `MulOperator`, `DivOperator`
-  - Advanced (unlocked later): `SquareOperator`, `SqrtOperator`, `PowerOperator`, `ModOperator`, `GcdOperator`, `FactorOperator`, `IsPrimeOperator`
-- [ ] `src/engine/entities/receiver.ts` — validates incoming tokens against objectives
+## Phase 2 — Entities ✅
+- [x] `src/engine/entities/extractor.ts` — `createExtractor(id, position, value, period, outputDirection)`
+- [x] `src/engine/entities/conveyor.ts` — `createConveyor`, `rotateConveyor` (CW), `rotateConveyorCCW`
+- [x] `src/engine/entities/operator.ts` — `BaseOperator` abstract class; all 11 implementations (`AddOperator`, `SubOperator`, `MulOperator`, `DivOperator`, `PowerOperator`, `ModOperator`, `GcdOperator`, `SquareOperator`, `SqrtOperator`, `FactorOperator`, `IsPrimeOperator`); `OPERATOR_REGISTRY`; `evaluateOperator`; `createOperator`
+- [x] `src/engine/entities/receiver.ts` — `createReceiver(id, position, expected, required)`
+- [x] Refactored `tick.ts`: `evaluateOperator` + math helpers moved to `operator.ts`; `tick.ts` now imports from `operator.ts`
+- [x] Verified: `npm run build` passes with zero TypeScript errors
 
 ---
 

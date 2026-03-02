@@ -9,8 +9,7 @@
 // All sub-functions are pure (WorldState in → WorldState out).
 // The TickEngine class wraps them in a setInterval scheduler.
 //
-// To add a new operator: add its OperatorType to types.ts, set OPERATOR_ARITY,
-// then add a case in evaluateOperator() below.
+// To add a new operator: see the extension guide at the top of operator.ts.
 // =============================================================================
 
 import type {
@@ -26,9 +25,9 @@ import {
   EntityType,
   DIRECTION_DELTA,
   OPERATOR_ARITY,
-  OperatorType,
 } from './entities/types'
 import { tileKey } from './grid'
+import { evaluateOperator } from './entities/operator'
 
 // ---------------------------------------------------------------------------
 // Internal token helpers
@@ -322,60 +321,6 @@ function tickOperators(state: WorldState): WorldState {
   }
 
   return s
-}
-
-// ---------------------------------------------------------------------------
-// Operator math
-// ---------------------------------------------------------------------------
-
-/**
- * Evaluate an operator given its filled input values.
- * Returns an array of output values (may be empty on invalid input, or
- * multi-element for FACTOR).
- */
-export function evaluateOperator(type: OperatorType, inputs: number[]): number[] {
-  const [a, b] = inputs
-  switch (type) {
-    case OperatorType.ADD:      return [a + b]
-    case OperatorType.SUB:      return [a - b]
-    case OperatorType.MUL:      return [a * b]
-    case OperatorType.DIV:      return b !== 0 ? [a / b] : []
-    case OperatorType.POWER:    return [Math.pow(a, b)]
-    case OperatorType.MOD:      return b !== 0 ? [((a % b) + b) % b] : []  // always non-negative
-    case OperatorType.GCD:      return [gcd(Math.abs(Math.round(a)), Math.abs(Math.round(b)))]
-    case OperatorType.SQUARE:   return [a * a]
-    case OperatorType.SQRT:     return a >= 0 ? [Math.sqrt(a)] : []
-    case OperatorType.FACTOR:   return primeFactors(Math.abs(Math.round(a)))
-    case OperatorType.IS_PRIME: return [isPrime(Math.abs(Math.round(a))) ? 1 : 0]
-    default:                    return []
-  }
-}
-
-function gcd(a: number, b: number): number {
-  while (b !== 0) { [a, b] = [b, a % b] }
-  return a
-}
-
-function isPrime(n: number): boolean {
-  if (n < 2) return false
-  if (n === 2) return true
-  if (n % 2 === 0) return false
-  for (let i = 3; i * i <= n; i += 2) {
-    if (n % i === 0) return false
-  }
-  return true
-}
-
-function primeFactors(n: number): number[] {
-  if (n <= 1) return []
-  const factors: number[] = []
-  let d = 2
-  while (d * d <= n) {
-    while (n % d === 0) { factors.push(d); n = Math.round(n / d) }
-    d++
-  }
-  if (n > 1) factors.push(n)
-  return factors
 }
 
 // ---------------------------------------------------------------------------
