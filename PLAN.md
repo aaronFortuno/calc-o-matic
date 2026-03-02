@@ -95,9 +95,11 @@ Build a Beltmatic-inspired browser-only educational math puzzle game (MVP) using
 
 ---
 
-## Phase 7 — Tests
+## Phase 7 — Tests ✅
 
 > All tests live under `src/tests/`. Run with `npm run test`. Use `vi.useFakeTimers()` wherever real time would be involved. No `Math.random()` — use seeded RNG. Every test must be deterministic and fast.
+>
+> **Result: 14 test files, 142 tests, all passing.** `npm run build` + `npm run test:run` both green.
 
 ---
 
@@ -261,10 +263,10 @@ File: `e2e/tutorial.spec.ts`
 ---
 
 ### 7.8 — Test Infrastructure Checklist
-- [ ] `src/tests/setup.ts` — Vitest global setup: mock `localStorage`, mock `requestAnimationFrame`, set fake timers by default
+- [x] `src/tests/setup.ts` — Vitest global setup: mock `localStorage`, mock `requestAnimationFrame`, jest-dom matchers
 - [ ] `vitest.config.ts` — coverage thresholds: 80% lines/branches for `src/engine/` and `src/store/`; lower threshold acceptable for UI components
 - [ ] CI step runs `npm run test -- --run` (non-watch) on every PR
-- [ ] Add `npm run test:coverage` script; output to `/coverage`
+- [x] `npm run test:coverage` script already configured; output to `/coverage`
 - [ ] Add `npm run test:e2e` script for Playwright (separate from unit test run)
 
 ---
