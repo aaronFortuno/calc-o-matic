@@ -48,10 +48,11 @@ Build a Beltmatic-inspired browser-only educational math puzzle game (MVP) using
 
 ---
 
-## Phase 3 — Persistence & Procedural Generation
-- [ ] `src/engine/procedural/serializer.ts` — save/load world to localStorage (JSON format); export/import level JSON
-- [ ] `src/engine/procedural/rules.ts` — placement/collision/connectivity rules
-- [ ] `src/engine/procedural/generator.ts` — deterministic procedural level generator (seed + difficulty params); optional Web Worker offload
+## Phase 3 — Persistence & Procedural Generation ✅
+- [x] `src/engine/procedural/rules.ts` — `validatePlacement`, `getAdjacentEntities`, `isConveyorFeedingTile`, `isExtractorConnected`, `isReceiverConnected`, `isOperatorConnected`, `checkConnectivity`
+- [x] `src/engine/procedural/serializer.ts` — `exportLevel` / `importLevel` (LevelDefinition JSON); `levelDefToWorld` (resets live state on import); `saveWorldToSlot` / `loadWorldFromSlot` / `clearSaveSlot` / `listSaveSlots` (3 localStorage save slots); `SaveSlotMeta` type
+- [x] `src/engine/procedural/generator.ts` — `SeededRNG` (LCG, Numerical Recipes params); `generate({ seed, difficulty })` → LevelDefinition; four difficulty templates: D0 (straight belt), D1 (one binary op), D2 (two chained ops), D3+ (SQUARE + ADD)
+- [x] Verified: `npm run build` passes with zero TypeScript errors
 
 ---
 
