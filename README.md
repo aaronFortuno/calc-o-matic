@@ -1,6 +1,6 @@
 # calc-o-matic
 
-> A Beltmatic-inspired educational math puzzle game that runs entirely in your browser. Build conveyor belt networks, route numeric tokens through math operators, and solve progressively harder puzzles — no install, no server, no fuss.
+> A Beltmatic-inspired educational math puzzle game that runs entirely in your browser. Build conveyor belt networks, route numeric tokens through math operators, and solve progressively harder puzzles — no install, no server, no fuss. Try it [https://aaronfortuno.github.io/calc-o-matic/](here)
 
 ---
 
