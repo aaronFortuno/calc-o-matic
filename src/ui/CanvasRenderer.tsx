@@ -5,10 +5,10 @@
 // grid lines are drawn directly to a <canvas>.  React overlays (Toolbar, HUD,
 // etc.) sit above this element in the DOM via absolute positioning.
 //
-// Responsibilities:
+// Features:
 //   - Grid lines (chunked, culled)
-//   - Entities (extractor, conveyor, operator, receiver)
-//   - Tokens (numeric bubbles)
+//   - Entities (extractor, conveyor with animated belt, operator, receiver)
+//   - Tokens with smooth interpolated movement between ticks
 //   - Pan (mouse drag, touch), zoom (wheel), click-to-place, right-click rotate
 // =============================================================================
 
@@ -28,7 +28,7 @@ import type {
   WorldState,
   Viewport,
   Entity,
-  Token,
+  TileCoord,
   ExtractorData,
   ConveyorData,
   OperatorData,
@@ -40,23 +40,26 @@ import type {
 // ---------------------------------------------------------------------------
 
 const COLORS = {
-  background:   '#111827',
-  gridLine:     '#1f2937',
-  gridLineMajor:'#374151',
-  extractor:    '#10b981',
-  extractorBg:  '#064e3b',
-  conveyor:     '#6b7280',
-  conveyorArrow:'#d1d5db',
-  operator:     '#6366f1',
-  operatorBg:   '#1e1b4b',
-  operatorText: '#c7d2fe',
-  receiver:     '#f59e0b',
-  receiverBg:   '#451a03',
-  receiverDone: '#22c55e',
-  token:        '#fbbf24',
-  tokenText:    '#1f2937',
-  highlight:    'rgba(99,102,241,0.3)',
-  completedBg:  '#14532d',
+  background:    '#111827',
+  gridLine:      '#1f2937',
+  gridLineMajor: '#374151',
+  extractor:     '#10b981',
+  extractorBg:   '#064e3b',
+  conveyor:      '#334155',
+  conveyorBelt:  '#475569',
+  conveyorTrack: '#64748b',
+  conveyorDash:  '#94a3b8',
+  operator:      '#6366f1',
+  operatorBg:    '#1e1b4b',
+  operatorText:  '#c7d2fe',
+  receiver:      '#f59e0b',
+  receiverBg:    '#451a03',
+  receiverDone:  '#22c55e',
+  token:         '#fbbf24',
+  tokenBorder:   '#d97706',
+  tokenText:     '#1f2937',
+  highlight:     'rgba(99,102,241,0.3)',
+  completedBg:   '#14532d',
 }
 
 // ---------------------------------------------------------------------------
@@ -88,10 +91,11 @@ function drawRoundedRect(
 }
 
 function drawEntity(
-  ctx:      CanvasRenderingContext2D,
-  entity:   Entity,
-  viewport: Viewport,
-  world:    WorldState,
+  ctx:       CanvasRenderingContext2D,
+  entity:    Entity,
+  viewport:  Viewport,
+  world:     WorldState,
+  animTime:  number,
 ) {
   const px   = tileToPixel(entity.position, viewport)
   const ts   = TILE_SIZE * viewport.zoom
@@ -122,37 +126,60 @@ function drawEntity(
     case EntityType.CONVEYOR: {
       const d     = entity.data as ConveyorData
       const [adx, ady] = ARROW_DELTA[d.direction]
-      ctx.fillStyle = COLORS.conveyor
-      ctx.globalAlpha = 0.4
-      drawRoundedRect(ctx, x, y, w, h, r * 0.5)
-      ctx.fill()
-      ctx.globalAlpha = 1
-
-      // Arrow
       const cx  = px.x + ts / 2
       const cy  = px.y + ts / 2
-      const len = ts * 0.3
-      const hw  = ts * 0.12   // half-width of arrowhead
-      const tip = { x: cx + adx * len, y: cy + ady * len }
-      const tail = { x: cx - adx * len, y: cy - ady * len }
 
-      ctx.beginPath()
-      ctx.moveTo(tail.x, tail.y)
-      ctx.lineTo(tip.x, tip.y)
-      ctx.strokeStyle = COLORS.conveyorArrow
-      ctx.lineWidth = Math.max(1.5, ts * 0.06)
-      ctx.lineCap = 'round'
-      ctx.stroke()
+      // Belt track background
+      const isHorizontal = d.direction === ConveyorDirection.LEFT || d.direction === ConveyorDirection.RIGHT
+      const trackW = isHorizontal ? w : w * 0.55
+      const trackH = isHorizontal ? h * 0.55 : h
+      const trackX = px.x + (ts - trackW) / 2
+      const trackY = px.y + (ts - trackH) / 2
 
-      // Arrowhead
-      const perpX = -ady * hw
-      const perpY = adx * hw
+      ctx.fillStyle = COLORS.conveyor
+      drawRoundedRect(ctx, trackX, trackY, trackW, trackH, ts * 0.06)
+      ctx.fill()
+
+      // Animated dashes moving in belt direction
+      const dashLen  = ts * 0.12
+      const gapLen   = ts * 0.18
+      const speed    = ts * 0.4
+      const offset   = (animTime * speed) % (dashLen + gapLen)
+      const lineLen  = isHorizontal ? trackW : trackH
+
+      ctx.strokeStyle = COLORS.conveyorDash
+      ctx.lineWidth   = Math.max(1, ts * 0.04)
+      ctx.lineCap     = 'round'
+
+      // Draw two rows of dashes (edges of belt)
+      for (const edge of [-1, 1]) {
+        const perpDist = (isHorizontal ? trackH : trackW) * 0.32 * edge
+        ctx.beginPath()
+        const dashStart = -dashLen + (adx > 0 || ady > 0 ? offset : (dashLen + gapLen) - offset)
+        for (let d = dashStart; d < lineLen; d += dashLen + gapLen) {
+          const startD = Math.max(0, d)
+          const endD   = Math.min(lineLen, d + dashLen)
+          if (endD <= startD) continue
+          if (isHorizontal) {
+            ctx.moveTo(trackX + startD, cy + perpDist)
+            ctx.lineTo(trackX + endD,   cy + perpDist)
+          } else {
+            ctx.moveTo(cx + perpDist, trackY + startD)
+            ctx.lineTo(cx + perpDist, trackY + endD)
+          }
+        }
+        ctx.stroke()
+      }
+
+      // Center chevron arrow
+      const arrLen = ts * 0.16
+      const arrW   = ts * 0.10
       ctx.beginPath()
-      ctx.moveTo(tip.x, tip.y)
-      ctx.lineTo(tip.x - adx * hw * 1.4 + perpX, tip.y - ady * hw * 1.4 + perpY)
-      ctx.lineTo(tip.x - adx * hw * 1.4 - perpX, tip.y - ady * hw * 1.4 - perpY)
+      ctx.moveTo(cx + adx * arrLen, cy + ady * arrLen)
+      ctx.lineTo(cx - adx * arrLen * 0.5 + (-ady) * arrW, cy - ady * arrLen * 0.5 + adx * arrW)
+      ctx.lineTo(cx - adx * arrLen * 0.5 - (-ady) * arrW, cy - ady * arrLen * 0.5 - adx * arrW)
       ctx.closePath()
-      ctx.fillStyle = COLORS.conveyorArrow
+      ctx.fillStyle = COLORS.conveyorTrack
       ctx.fill()
       break
     }
@@ -185,7 +212,6 @@ function drawEntity(
 
     case EntityType.RECEIVER: {
       const d = entity.data as ReceiverData
-      // Check objective progress from world
       const obj = world.objectives.find(o => {
         const eid = world.tileIndex[`${entity.position.x},${entity.position.y}`]
         return o.receiverId === eid
@@ -216,27 +242,36 @@ function drawEntity(
   }
 }
 
-function drawToken(
+/** Draw a token at an interpolated pixel position. */
+function drawTokenAt(
   ctx:      CanvasRenderingContext2D,
-  token:    Token,
-  viewport: Viewport,
+  value:    number,
+  pixX:     number,
+  pixY:     number,
+  ts:       number,
 ) {
-  const px  = tileToPixel(token.position, viewport)
-  const ts  = TILE_SIZE * viewport.zoom
-  const cx  = px.x + ts / 2
-  const cy  = px.y + ts / 2
-  const r   = ts * 0.22
+  const r = ts * 0.22
 
+  // Shadow
   ctx.beginPath()
-  ctx.arc(cx, cy, r, 0, Math.PI * 2)
+  ctx.arc(pixX, pixY + ts * 0.04, r, 0, Math.PI * 2)
+  ctx.fillStyle = 'rgba(0,0,0,0.3)'
+  ctx.fill()
+
+  // Circle
+  ctx.beginPath()
+  ctx.arc(pixX, pixY, r, 0, Math.PI * 2)
   ctx.fillStyle = COLORS.token
   ctx.fill()
+  ctx.strokeStyle = COLORS.tokenBorder
+  ctx.lineWidth = Math.max(1, ts * 0.03)
+  ctx.stroke()
 
   ctx.fillStyle = COLORS.tokenText
   ctx.font = `bold ${Math.max(8, ts * 0.2)}px monospace`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(String(token.value), cx, cy)
+  ctx.fillText(String(value), pixX, pixY)
 }
 
 function opLabel(type: string): string {
@@ -259,6 +294,8 @@ export function CanvasRenderer() {
 
   const world    = useWorldStore(s => s.world)
   const viewport = useWorldStore(s => s.viewport)
+  const tickRate = useWorldStore(s => s.tickRate)
+  const running  = useWorldStore(s => s.running)
   const doPan    = useWorldStore(s => s.panViewport)
   const doZoom   = useWorldStore(s => s.zoomViewport)
   const placeEntity   = useWorldStore(s => s.placeEntity)
@@ -270,24 +307,69 @@ export function CanvasRenderer() {
   const worldRef    = useRef(world)
   const viewportRef = useRef(viewport)
   const toolRef     = useRef(selectedTool)
-  useEffect(() => { worldRef.current    = world    }, [world])
-  useEffect(() => { viewportRef.current = viewport }, [viewport])
+  const tickRateRef = useRef(tickRate)
+  const runningRef  = useRef(running)
+  useEffect(() => { worldRef.current    = world        }, [world])
+  useEffect(() => { viewportRef.current = viewport     }, [viewport])
   useEffect(() => { toolRef.current     = selectedTool }, [selectedTool])
+  useEffect(() => { tickRateRef.current = tickRate     }, [tickRate])
+  useEffect(() => { runningRef.current  = running      }, [running])
+
+  // -----------------------------------------------------------------------
+  // Token interpolation state — tracks previous positions for smooth lerp
+  // -----------------------------------------------------------------------
+
+  const prevTokenPosRef = useRef<Record<string, TileCoord>>({})
+  const lastTickCountRef = useRef<number>(-1)
+  const lastTickTimeRef  = useRef<number>(performance.now())
+
+  // When tick count changes, snapshot previous positions
+  useEffect(() => {
+    const newTickCount = world.tickCount
+    if (newTickCount !== lastTickCountRef.current) {
+      // Save current positions as "previous" for tokens that still exist
+      const prev: Record<string, TileCoord> = {}
+      const prevMap = prevTokenPosRef.current
+      for (const [id, token] of Object.entries(world.tokens)) {
+        // If the token already had a position in prev, use its old current as new prev
+        // Otherwise it's a new token — prev = current (no interpolation on spawn)
+        if (prevMap[id]) {
+          // Use what was the "current" position last tick as the new "previous"
+          prev[id] = prevMap[`__curr__${id}`] ?? token.position
+        } else {
+          prev[id] = token.position
+        }
+        prev[`__curr__${id}`] = token.position
+      }
+      prevTokenPosRef.current = prev
+      lastTickCountRef.current = newTickCount
+      lastTickTimeRef.current  = performance.now()
+    }
+  }, [world])
 
   // -------------------------------------------------------------------------
   // Render loop
   // -------------------------------------------------------------------------
 
-  const draw = useCallback(() => {
+  const draw = useCallback((now: number) => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
-    const { offsetX, offsetY, zoom } = viewportRef.current
+    const vp = viewportRef.current
+    const { offsetX, offsetY, zoom } = vp
     const w = canvas.width
     const h = canvas.height
     const ts = TILE_SIZE * zoom
+
+    // Animation time in seconds (for conveyor belt animation)
+    const animTime = now / 1000
+
+    // Interpolation factor: how far between last tick and next tick (0..1)
+    const tickInterval = 1000 / tickRateRef.current
+    const elapsed      = now - lastTickTimeRef.current
+    const lerpT        = runningRef.current ? Math.min(1, elapsed / tickInterval) : 1
 
     ctx.clearRect(0, 0, w, h)
 
@@ -320,7 +402,7 @@ export function CanvasRenderer() {
     }
 
     // Entities (chunked: only visible)
-    const chunks = getVisibleChunks(viewportRef.current, w, h)
+    const chunks = getVisibleChunks(vp, w, h)
     const vWorld = worldRef.current
 
     for (const chunk of chunks) {
@@ -330,21 +412,33 @@ export function CanvasRenderer() {
           const key = `${tl.x + dx},${tl.y + dy}`
           const eid = vWorld.tileIndex[key]
           if (eid) {
-            drawEntity(ctx, vWorld.entities[eid], viewportRef.current, vWorld)
+            drawEntity(ctx, vWorld.entities[eid], vp, vWorld, animTime)
           }
         }
       }
     }
 
-    // Tokens
+    // Tokens — interpolated positions
+    const prevMap = prevTokenPosRef.current
     for (const token of Object.values(vWorld.tokens)) {
-      drawToken(ctx, token, viewportRef.current)
+      const prev = prevMap[token.id] ?? token.position
+      const curr = token.position
+
+      // Interpolate tile position
+      const interpX = prev.x + (curr.x - prev.x) * lerpT
+      const interpY = prev.y + (curr.y - prev.y) * lerpT
+
+      // Convert to pixel position (center of tile)
+      const pixX = interpX * ts * 1 + offsetX + ts / 2
+      const pixY = interpY * ts * 1 + offsetY + ts / 2
+
+      drawTokenAt(ctx, token.value, pixX, pixY, ts)
     }
   }, [])
 
   useEffect(() => {
-    const loop = () => {
-      draw()
+    const loop = (now: number) => {
+      draw(now)
       rafRef.current = requestAnimationFrame(loop)
     }
     rafRef.current = requestAnimationFrame(loop)
@@ -384,7 +478,6 @@ export function CanvasRenderer() {
     const py   = e.clientY - rect.top
 
     if (e.button === 1 || (e.button === 0 && e.altKey)) {
-      // Middle mouse / alt+click = start pan
       dragRef.current = {
         startX: e.clientX, startY: e.clientY,
         lastOffX: viewportRef.current.offsetX,
@@ -395,7 +488,6 @@ export function CanvasRenderer() {
     }
 
     if (e.button === 2) {
-      // Right-click = rotate conveyor
       const tile = pixelToTile(px, py, viewportRef.current)
       rotateEntity(tile)
       return
@@ -417,7 +509,6 @@ export function CanvasRenderer() {
     if (!dragRef.current) return
     const dx = e.clientX - dragRef.current.startX
     const dy = e.clientY - dragRef.current.startY
-    // Update via store (triggers re-render which updates ref)
     doPan(
       dragRef.current.lastOffX - viewportRef.current.offsetX + dx,
       dragRef.current.lastOffY - viewportRef.current.offsetY + dy,
@@ -449,7 +540,6 @@ export function CanvasRenderer() {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      // Ignore if focus is in an input/textarea
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return
 
       switch (e.key) {

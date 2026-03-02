@@ -117,8 +117,24 @@
       "description": "Connect the Extractor to the Receiver using Conveyors."
     },
     "tutorial2": {
-      "name":        "Tutorial 2 — ADD Operator",
+      "name":        "Tutorial 2 — Addition",
       "description": "Combine two numbers using the ADD operator."
+    },
+    "tutorial3": {
+      "name":        "Tutorial 3 — Multiplication",
+      "description": "Multiply two numbers using the MUL operator."
+    },
+    "tutorial4": {
+      "name":        "Tutorial 4 — Subtraction",
+      "description": "Subtract numbers using the SUB operator."
+    },
+    "tutorial5": {
+      "name":        "Tutorial 5 — Division",
+      "description": "Divide numbers using the DIV operator."
+    },
+    "tutorial6": {
+      "name":        "Tutorial 6 — Chained Operators",
+      "description": "Chain MUL and ADD operators in sequence."
     },
     "procedural":   "Puzzle #{{seed}} (D{{difficulty}})",
     "noLevel":      "No level loaded"

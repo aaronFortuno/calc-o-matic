@@ -121,12 +121,15 @@ function tickExtractors(state: WorldState): WorldState {
 // 2. Conveyors — move tokens forward; deposit into operators/receivers
 // ---------------------------------------------------------------------------
 
-function tickConveyors(state: WorldState): WorldState {
+function tickConveyors(state: WorldState, moveableIds?: Set<string>): WorldState {
   let s = state
 
-  // Collect tokens that sit on a conveyor tile, sorted by id for determinism
+  // Collect tokens that sit on a conveyor tile, sorted by id for determinism.
+  // If moveableIds is provided, only move tokens that existed before this tick
+  // (prevents freshly minted extractor tokens from moving on the same tick).
   const moveable = Object.values(s.tokens)
     .filter(tok => {
+      if (moveableIds && !moveableIds.has(tok.id)) return false
       const eid = s.tileIndex[tileKey(tok.position)]
       return eid != null && s.entities[eid]?.type === EntityType.CONVEYOR
     })
@@ -328,8 +331,13 @@ function tickOperators(state: WorldState): WorldState {
 // ---------------------------------------------------------------------------
 
 export function tickWorld(state: WorldState): WorldState {
+  // Snapshot token IDs before extractors emit, so that freshly minted tokens
+  // are NOT moved by conveyors in the same tick.  This prevents the visual
+  // glitch where tokens appear to "skip" the first conveyor tile.
+  const preExistingTokenIds = new Set(Object.keys(state.tokens))
+
   let s = tickExtractors(state)
-  s     = tickConveyors(s)
+  s     = tickConveyors(s, preExistingTokenIds)
   s     = tickOperators(s)
   return { ...s, tickCount: s.tickCount + 1 }
 }

@@ -271,6 +271,17 @@ File: `e2e/tutorial.spec.ts`
 
 ---
 
+## Phase 7.5 — Visual & Gameplay Overhaul ✅
+- [x] **Token emission fix**: Freshly minted tokens no longer skip the first conveyor tile (same-tick movement prevention via `preExistingTokenIds` set in `tickWorld`)
+- [x] **Smooth token animation**: Canvas renderer now interpolates token positions between ticks using lerp, creating fluid movement along conveyor belts
+- [x] **Improved conveyor visuals**: Animated dashed belt lines that move in the belt direction, plus chevron directional arrows
+- [x] **6 tutorial levels**: Conveyor basics, ADD, MUL, SUB, DIV, Chained operators (MUL→ADD)
+- [x] **Procedural generator overhaul**: D0 (belt), D1 (ADD/MUL/SUB/DIV), D2 (two chained ops), D3 (5 templates: SQUARE+ADD, SQRT+ADD, MUL−SUB, ADD%MOD, MUL÷DIV), D4 (4 expert templates with 3–4 extractors)
+- [x] **Test updates**: tick.test.ts updated for same-tick prevention; all 142 tests passing
+- [x] Verified: `npm run build` + `npm run test:run` both green
+
+---
+
 ## Phase 8 — Accessibility & Polish
 - [ ] Keyboard controls: arrow keys to pan, `+`/`-` to zoom, number keys to select toolbar item
 - [ ] Tooltips on hover for all toolbar items

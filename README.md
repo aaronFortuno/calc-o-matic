@@ -20,11 +20,13 @@ Complete objectives to earn XP, unlock advanced operators, and tackle increasing
 ## Features
 
 - Tile-based factory puzzle gameplay inspired by Beltmatic
-- Discrete tick simulation (6–10 ticks/sec, adjustable)
+- Discrete tick simulation (1–60 ticks/sec, adjustable) with smooth token animation between ticks
+- 6 tutorial levels covering conveyor basics, ADD, MUL, SUB, DIV, and chained operators
 - Progressive operator unlocks (start with ADD/MUL, unlock SQRT, FACTOR, IS_PRIME, and more)
-- Procedural level generator with seed & difficulty controls
-- In-app admin / config panel for level authoring and export/import
-- Tutorial level included for new players
+- Procedural level generator with 5 difficulty tiers (D0–D4), diverse operator templates, and seeded RNG
+- Level completion awards XP with a completion modal and automatic progression
+- In-app admin / config panel for level authoring, export/import, and save slots
+- Animated conveyor belts with directional indicators
 - Infinite (virtualized) canvas grid with pan & zoom
 - Keyboard controls: arrow keys to pan, `+`/`-` to zoom, number keys to select tools
 - Persistent player profile via localStorage (no account required)
