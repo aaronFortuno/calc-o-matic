@@ -1,0 +1,119 @@
+{
+  "game": {
+    "title": "calc-o-matic"
+  },
+
+  "toolbar": {
+    "title": "Tools",
+    "tools": {
+      "extractor":  "Extractor",
+      "conveyor":   "Conveyor",
+      "eraser":     "Eraser",
+      "ADD":        "Add (+)",
+      "SUB":        "Subtract (−)",
+      "MUL":        "Multiply (×)",
+      "DIV":        "Divide (÷)",
+      "POWER":      "Power (xⁿ)",
+      "MOD":        "Modulo (%)",
+      "GCD":        "GCD",
+      "SQUARE":     "Square (x²)",
+      "SQRT":       "Square Root (√)",
+      "FACTOR":     "Factor",
+      "IS_PRIME":   "Is Prime?"
+    },
+    "tooltip": {
+      "extractor":  "Place an Extractor — emits a numeric token every N ticks",
+      "conveyor":   "Place a Conveyor — routes tokens in one direction",
+      "eraser":     "Remove any entity from the grid",
+      "ADD":        "ADD operator — outputs a + b",
+      "SUB":        "SUB operator — outputs a − b",
+      "MUL":        "MUL operator — outputs a × b",
+      "DIV":        "DIV operator — outputs a ÷ b (drops token if b = 0)",
+      "POWER":      "POWER operator — outputs aⁿ",
+      "MOD":        "MOD operator — outputs a mod b (drops token if b = 0)",
+      "GCD":        "GCD operator — outputs the greatest common divisor of a and b",
+      "SQUARE":     "SQUARE operator — outputs a²",
+      "SQRT":       "SQRT operator — outputs √a (drops token if a < 0)",
+      "FACTOR":     "FACTOR operator — outputs all prime factors of a as separate tokens",
+      "IS_PRIME":   "IS_PRIME operator — outputs 1 if a is prime, otherwise 0"
+    },
+    "locked": "Locked — earn {{xp}} XP to unlock"
+  },
+
+  "hud": {
+    "objectives":    "Objectives",
+    "progress":      "{{delivered}} / {{required}}",
+    "xp":            "{{xp}} XP",
+    "level":         "Level {{level}}",
+    "tickSpeed":     "Speed: {{speed}}×",
+    "ticks":         "Tick {{count}}",
+    "completed":     "Complete!",
+    "paused":        "Paused",
+    "running":       "Running"
+  },
+
+  "admin": {
+    "title":            "Admin Panel",
+    "passphrase":       "Enter passphrase",
+    "wrongPassphrase":  "Incorrect passphrase",
+    "seed":             "Seed",
+    "difficulty":       "Difficulty",
+    "tickSpeed":        "Tick Speed (ticks/sec)",
+    "generate":         "Generate",
+    "export":           "Export Level",
+    "import":           "Import Level",
+    "importPlaceholder":"Paste level JSON here…",
+    "importSuccess":    "Level imported successfully.",
+    "importError":      "Import failed: {{error}}",
+    "saveSlot":         "Save Slot {{index}}",
+    "save":             "Save",
+    "load":             "Load",
+    "clear":            "Clear",
+    "empty":            "Empty",
+    "savedAt":          "Saved {{date}}",
+    "ticks":            "{{count}} ticks"
+  },
+
+  "tutorial": {
+    "step1": {
+      "title": "Welcome to calc-o-matic!",
+      "body":  "Build factory lines that process numbers. Route tokens through math operators to hit the target value at the Receiver."
+    },
+    "step2": {
+      "title": "Placing Components",
+      "body":  "Select a tool from the toolbar on the left. Click any empty grid tile to place it. Right-click a Conveyor to rotate it."
+    },
+    "step3": {
+      "title": "Your First Puzzle",
+      "body":  "An Extractor is already placed — connect it to the Receiver with Conveyor belts. Hit Start when you're ready!"
+    },
+    "next":   "Next",
+    "skip":   "Skip",
+    "finish": "Let's go!"
+  },
+
+  "objective": {
+    "deliver": "Deliver {{required}} tokens of value {{value}}",
+    "completed": "✓ Objective complete!"
+  },
+
+  "simulation": {
+    "start":  "Start",
+    "pause":  "Pause",
+    "resume": "Resume",
+    "reset":  "Reset"
+  },
+
+  "errors": {
+    "occupied":     "That tile is already occupied.",
+    "outOfBounds":  "Cannot place outside the grid boundary.",
+    "noConnection": "This component has no valid connection.",
+    "unknown":      "An unknown error occurred."
+  },
+
+  "common": {
+    "close": "Close",
+    "ok":    "OK",
+    "cancel":"Cancel"
+  }
+}

@@ -56,19 +56,25 @@ Build a Beltmatic-inspired browser-only educational math puzzle game (MVP) using
 
 ---
 
-## Phase 4 — i18n
-- [ ] `src/i18n/en.json` — all UI strings, tooltips, tutorial text, error messages
-- [ ] `src/i18n/index.ts` — i18next configuration (language detection, fallback)
-- [ ] Wire `I18nextProvider` in `main.tsx`
+## Phase 4 — i18n ✅
+- [x] `src/i18n/en.json` — all UI strings, tooltips, tutorial text, error messages
+- [x] `src/i18n/index.ts` — i18next init (lng: 'en', fallbackLng: 'en', escapeValue: false)
+- [x] `import './i18n'` added to `main.tsx` before React render
+- [x] Verified: `npm run build` passes with zero TypeScript errors
 
 ---
 
-## Phase 5 — UI Components
-- [ ] `src/ui/CanvasRenderer.tsx` — HTML5 Canvas grid renderer with chunked rendering, pan/zoom, mouse/touch input
-- [ ] `src/components/Toolbar.tsx` — component selector; locked items shown disabled with tooltip unlock hint
-- [ ] `src/components/HUD.tsx` — score, level, objectives, progression bar
-- [ ] `src/components/AdminPanel.tsx` — seed, difficulty, tick speed, export/import level JSON; hidden behind passphrase
-- [ ] `src/components/TutorialModal.tsx` — first-run tutorial overlay with step-by-step instructions
+## Phase 5 — UI Components ✅
+- [x] `src/store/playerStore.ts` — Zustand + persist; XP, level, unlockedOperators, completedLevels; `OPERATOR_UNLOCK_XP` thresholds; `awardXP`, `completeLevel`, `resetPlayer` actions
+- [x] `src/store/uiStore.ts` — selectedTool (ToolType), adminOpen, tutorialVisible/step; `selectTool`, `openAdmin/closeAdmin`, `nextTutorialStep`, `skipTutorial` actions; tutorialSeen via localStorage flag
+- [x] `src/store/worldStore.ts` — WorldState, Viewport, seed, difficulty, tickRate, running; `TickEngine` as module-level singleton; `placeEntity`, `removeEntityAt`, `rotateEntityAt`; `startSim/stopSim/setTickRate/resetSim`; `generateLevel`, `importLevelJson`, `exportLevelJson`; `saveToSlot/loadFromSlot/clearSlot`
+- [x] `src/ui/CanvasRenderer.tsx` — rAF render loop; chunked grid lines; entity drawing (extractor, conveyor with arrow, operator with processing indicator, receiver with progress); token bubbles; mouse pan (middle-click/alt+click drag), scroll-wheel zoom, left-click place, right-click rotate; keyboard arrow-key pan, +/- zoom; ResizeObserver for canvas sizing
+- [x] `src/components/Toolbar.tsx` — tool buttons for extractor, conveyor, eraser, all 11 operators; locked operators disabled with XP tooltip; keyboard shortcuts (1/2/0 for basics, 3+ for operators); selected state ring highlight
+- [x] `src/components/HUD.tsx` — objectives bar (completed state shown in green), tick counter, tick-speed +/- knob, Start/Pause/Reset buttons, XP/level display with progress bar
+- [x] `src/components/AdminPanel.tsx` — gear button trigger + /#admin hash; passphrase gate; seed/difficulty inputs + Generate; tick-speed slider; Export (downloads JSON file); Import (textarea + parse + error display); 3 save slots with Save/Load/Clear
+- [x] `src/components/TutorialModal.tsx` — 3-step tutorial; skip / next / finish; step dots indicator; auto-shows on first run (checks localStorage tutorialSeen flag); closes on backdrop click
+- [x] `src/App.tsx` — composes CanvasRenderer + Toolbar + HUD + AdminPanel + TutorialModal
+- [x] Verified: `npm run build` passes with zero TypeScript errors
 
 ---
 

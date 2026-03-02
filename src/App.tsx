@@ -1,8 +1,21 @@
-// Root component — placeholder until Phase 5 UI components are wired in.
+// Root component — composes all UI layers over the Canvas renderer.
+import { CanvasRenderer }  from './ui/CanvasRenderer'
+import { Toolbar }         from './components/Toolbar'
+import { HUD }             from './components/HUD'
+import { AdminPanel }      from './components/AdminPanel'
+import { TutorialModal }   from './components/TutorialModal'
+
 function App() {
   return (
-    <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center">
-      <h1 className="text-4xl font-bold tracking-tight">calc-o-matic</h1>
+    <div className="relative w-screen h-screen overflow-hidden bg-gray-950">
+      {/* Game canvas — fills the whole viewport */}
+      <CanvasRenderer />
+
+      {/* UI overlays */}
+      <Toolbar />
+      <HUD />
+      <AdminPanel />
+      <TutorialModal />
     </div>
   )
 }
