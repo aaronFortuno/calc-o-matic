@@ -29,13 +29,12 @@ Build a Beltmatic-inspired browser-only educational math puzzle game (MVP) using
 
 ---
 
-## Phase 1 — Core Type System & Engine Foundations
-- [ ] `src/engine/entities/types.ts` — define all shared TypeScript types:
-  - `EntityType`, `OperatorType`, `ConveyorDirection`
-  - `TileCoord`, `Chunk`, `Token`, `Entity`, `WorldState`
-- [ ] `src/engine/grid.ts` — tile coordinate helpers, chunk math, pan/zoom state
-- [ ] `src/engine/world.ts` — world state, entity registry (add/remove/query entities)
-- [ ] `src/engine/tick.ts` — discrete game loop (tick scheduler, 6–10 ticks/sec, adjustable)
+## Phase 1 — Core Type System & Engine Foundations ✅
+- [x] `src/engine/entities/types.ts` — `EntityType`, `OperatorType`, `ConveyorDirection`, `TileCoord`, `ChunkCoord`, `Token`, `Entity`, `WorldState`, `Viewport`, `Objective`, `LevelDefinition`, `PlacementResult`, `OPERATOR_ARITY`, `DIRECTION_DELTA`
+- [x] `src/engine/grid.ts` — `TILE_SIZE`, `CHUNK_SIZE`, `MIN_ZOOM`, `MAX_ZOOM`, `PAN_STEP`; `tileKey`, `parseTileKey`, `tileToChunk`, `chunkTopLeft`, `tileToPixel`, `pixelToTile`, `chunkToPixelRect`, `getVisibleChunks`, `clampZoom`, `createViewport`, `panViewport`, `zoomViewport`
+- [x] `src/engine/world.ts` — `createWorld`, `addEntity`, `removeEntity`, `getEntityAt`, `getEntityById`, `queryEntitiesByType`, `updateEntity`, `addObjective`, `isLevelComplete`
+- [x] `src/engine/tick.ts` — `tickWorld` (pure, composes `tickExtractors` → `tickConveyors` → `tickOperators`); `evaluateOperator` (all 11 operators); `TickEngine` class (start/stop/setTickRate/setState); math helpers `gcd`, `isPrime`, `primeFactors`
+- [x] Verified: `npm run build` passes with zero TypeScript errors
 
 ---
 
