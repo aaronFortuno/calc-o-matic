@@ -122,22 +122,30 @@
     },
     "tutorial3": {
       "name":        "Tutorial 3 — Multiplication",
-      "description": "Multiply two numbers using the MUL operator."
+      "description": "Place a MUL operator and conveyors to multiply 3 × 4 = 12."
     },
     "tutorial4": {
       "name":        "Tutorial 4 — Subtraction",
-      "description": "Subtract numbers using the SUB operator."
+      "description": "Place a SUB operator and conveyors to compute 10 − 3 = 7."
     },
     "tutorial5": {
       "name":        "Tutorial 5 — Division",
-      "description": "Divide numbers using the DIV operator."
+      "description": "Place a DIV operator and conveyors to compute 12 ÷ 4 = 3."
     },
     "tutorial6": {
       "name":        "Tutorial 6 — Chained Operators",
-      "description": "Chain MUL and ADD operators in sequence."
+      "description": "Place MUL, ADD, and conveyors to compute (2 × 5) + 4 = 14."
     },
     "procedural":   "Puzzle #{{seed}} (D{{difficulty}})",
     "noLevel":      "No level loaded"
+  },
+
+  "levelSelect": {
+    "title":            "Levels",
+    "tutorials":        "Tutorials",
+    "procedural":       "Procedural",
+    "proceduralLocked": "Complete all tutorials to unlock procedural levels.",
+    "generate":         "Generate"
   },
 
   "levelComplete": {

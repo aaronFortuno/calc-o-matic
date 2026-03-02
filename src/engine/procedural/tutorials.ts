@@ -78,25 +78,21 @@ export function tutorialLevel2(): LevelDefinition {
 }
 
 // ---------------------------------------------------------------------------
-// Tutorial 3 — MUL: 3 × 4 = 12
+// Tutorial 3 — MUL: 3 × 4 = 12 (puzzle — player places MUL + conveyors)
 //
-//            E[4]           ← (2, -2) DOWN
-//             |
-//             C             ← (2, -1) DOWN
-//             |
-//  E[3] → C → MUL → C → R[12, ×3]
+//            E[4]           ← (2, -2) DOWN — locked
+//             ?
+//             ?             ← player places conveyor + MUL + conveyor
+//             ?
+//  E[3] → ? → ? → ? → R[12, ×3]
 //  (0,0) (1,0)(2,0)(3,0)(4,0)
 // ---------------------------------------------------------------------------
 
 export function tutorialLevel3(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 3, 3, ConveyorDirection.RIGHT),
-    createConveyor ('c1', { x: 1, y:  0 }, ConveyorDirection.RIGHT),
-    createOperator ('o1', { x: 2, y:  0 }, OperatorType.MUL, ConveyorDirection.RIGHT, 1),
-    createConveyor ('c2', { x: 3, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 4, y:  0 }, 12, 3),
     createExtractor('e2', { x: 2, y: -2 }, 4, 3, ConveyorDirection.DOWN),
-    createConveyor ('c3', { x: 2, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -107,29 +103,26 @@ export function tutorialLevel3(): LevelDefinition {
     completed:   false,
   }]
 
-  return { version: 1, seed: 0, difficulty: 1, entities, objectives }
+  return {
+    version: 1, seed: 0, difficulty: 1, entities, objectives,
+    lockedEntityIds: ['e1', 'r1', 'e2'],
+    allowedTools: ['conveyor', 'MUL', 'eraser'],
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Tutorial 4 — SUB: 10 - 3 = 7
+// Tutorial 4 — SUB: 10 - 3 = 7 (puzzle — player places SUB + conveyors)
 //
-//            E[3]           ← (2, -2) DOWN
-//             |
-//             C             ← (2, -1) DOWN
-//             |
-//  E[10] → C → SUB → C → R[7, ×3]
-//  (0,0)  (1,0)(2,0)(3,0)(4,0)
+//            E[3]           ← (2, -2) DOWN — locked
+//  E[10]  ?  ?  ?  R[7, ×3]
+//  (0,0) (1,0)(2,0)(3,0)(4,0)
 // ---------------------------------------------------------------------------
 
 export function tutorialLevel4(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 10, 3, ConveyorDirection.RIGHT),
-    createConveyor ('c1', { x: 1, y:  0 }, ConveyorDirection.RIGHT),
-    createOperator ('o1', { x: 2, y:  0 }, OperatorType.SUB, ConveyorDirection.RIGHT, 1),
-    createConveyor ('c2', { x: 3, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 4, y:  0 }, 7, 3),
     createExtractor('e2', { x: 2, y: -2 }, 3, 3, ConveyorDirection.DOWN),
-    createConveyor ('c3', { x: 2, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -140,29 +133,26 @@ export function tutorialLevel4(): LevelDefinition {
     completed:   false,
   }]
 
-  return { version: 1, seed: 0, difficulty: 1, entities, objectives }
+  return {
+    version: 1, seed: 0, difficulty: 1, entities, objectives,
+    lockedEntityIds: ['e1', 'r1', 'e2'],
+    allowedTools: ['conveyor', 'SUB', 'eraser'],
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Tutorial 5 — DIV: 12 ÷ 4 = 3
+// Tutorial 5 — DIV: 12 ÷ 4 = 3 (puzzle — player places DIV + conveyors)
 //
-//            E[4]           ← (2, -2) DOWN
-//             |
-//             C             ← (2, -1) DOWN
-//             |
-//  E[12] → C → DIV → C → R[3, ×3]
-//  (0,0)  (1,0)(2,0)(3,0)(4,0)
+//            E[4]           ← (2, -2) DOWN — locked
+//  E[12]  ?  ?  ?  R[3, ×3]
+//  (0,0) (1,0)(2,0)(3,0)(4,0)
 // ---------------------------------------------------------------------------
 
 export function tutorialLevel5(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 12, 3, ConveyorDirection.RIGHT),
-    createConveyor ('c1', { x: 1, y:  0 }, ConveyorDirection.RIGHT),
-    createOperator ('o1', { x: 2, y:  0 }, OperatorType.DIV, ConveyorDirection.RIGHT, 1),
-    createConveyor ('c2', { x: 3, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 4, y:  0 }, 3, 3),
     createExtractor('e2', { x: 2, y: -2 }, 4, 3, ConveyorDirection.DOWN),
-    createConveyor ('c3', { x: 2, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -173,33 +163,27 @@ export function tutorialLevel5(): LevelDefinition {
     completed:   false,
   }]
 
-  return { version: 1, seed: 0, difficulty: 1, entities, objectives }
+  return {
+    version: 1, seed: 0, difficulty: 1, entities, objectives,
+    lockedEntityIds: ['e1', 'r1', 'e2'],
+    allowedTools: ['conveyor', 'DIV', 'eraser'],
+  }
 }
 
 // ---------------------------------------------------------------------------
-// Tutorial 6 — Chained: (2 × 5) + 4 = 14
+// Tutorial 6 — Chained: (2 × 5) + 4 = 14 (puzzle — player places MUL, ADD, conveyors)
 //
-//            E[5]         E[4]         ← (2,-2) and (4,-2)
-//             |            |
-//             C            C           ← (2,-1) and (4,-1)
-//             |            |
-//  E[2] → C → MUL → C → ADD → C → R[14, ×3]
-//  (0,0) (1,0)(2,0)  (3,0)(4,0)(5,0)(6,0)
+//            E[5]         E[4]         ← (2,-2) and (4,-2) — locked
+//  E[2]  ?  ?  ?  ?  ?  R[14, ×3]
+//  (0,0) (1,0)(2,0)(3,0)(4,0)(5,0)(6,0)
 // ---------------------------------------------------------------------------
 
 export function tutorialLevel6(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 2, 3, ConveyorDirection.RIGHT),
-    createConveyor ('c1', { x: 1, y:  0 }, ConveyorDirection.RIGHT),
-    createOperator ('o1', { x: 2, y:  0 }, OperatorType.MUL, ConveyorDirection.RIGHT, 1),
-    createConveyor ('c2', { x: 3, y:  0 }, ConveyorDirection.RIGHT),
-    createOperator ('o2', { x: 4, y:  0 }, OperatorType.ADD, ConveyorDirection.RIGHT, 1),
-    createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, 14, 3),
     createExtractor('e2', { x: 2, y: -2 }, 5, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 2, y: -1 }, ConveyorDirection.DOWN),
     createExtractor('e3', { x: 4, y: -2 }, 4, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -210,7 +194,11 @@ export function tutorialLevel6(): LevelDefinition {
     completed:   false,
   }]
 
-  return { version: 1, seed: 0, difficulty: 2, entities, objectives }
+  return {
+    version: 1, seed: 0, difficulty: 2, entities, objectives,
+    lockedEntityIds: ['e1', 'r1', 'e2', 'e3'],
+    allowedTools: ['conveyor', 'MUL', 'ADD', 'eraser'],
+  }
 }
 
 // ---------------------------------------------------------------------------

@@ -18,7 +18,7 @@ import { importLevel, exportLevel, levelDefToWorld, saveWorldToSlot, loadWorldFr
 import { createExtractor }  from '../engine/entities/extractor'
 import { createConveyor, rotateConveyor } from '../engine/entities/conveyor'
 import { createOperator }   from '../engine/entities/operator'
-import type { ToolType }    from './uiStore'
+import type { ToolType }    from '../engine/entities/types'
 import { OperatorType }     from '../engine/entities/types'
 import { getLevelCatalog }  from '../engine/procedural/tutorials'
 import type { LevelEntry }  from '../engine/procedural/tutorials'
@@ -66,6 +66,10 @@ export interface WorldStore {
   currentLevelName: string | null       // display name (i18n key)
   levelComplete:    boolean             // true when all objectives completed this run
   levelCatalog:     LevelEntry[]        // tutorial + procedural catalog
+
+  // Puzzle constraints
+  lockedEntityIds:  string[]            // entities the player cannot erase/rotate
+  allowedTools:     string[] | null     // null = all tools available
 
   // Simulation controls
   startSim:     () => void
@@ -165,6 +169,8 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
     currentLevelName: null,
     levelComplete:    false,
     levelCatalog:     catalog,
+    lockedEntityIds:  [],
+    allowedTools:     null,
 
     // -----------------------------------------------------------------------
     // Simulation
@@ -201,9 +207,9 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
       // If we're on a catalog level, regenerate from its definition
       const catalogEntry = levelCatalog.find(l => l.id === currentLevelId)
       const def = catalogEntry ? catalogEntry.generate() : generate({ seed, difficulty })
-      const { world, objectives } = levelDefToWorld(def)
+      const { world, objectives, lockedEntityIds, allowedTools } = levelDefToWorld(def)
       _engine = new TickEngine(world, onTick, get().tickRate)
-      set({ world, objectives, running: false, levelComplete: false })
+      set({ world, objectives, running: false, levelComplete: false, lockedEntityIds, allowedTools })
     },
 
     // -----------------------------------------------------------------------
@@ -242,18 +248,20 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
     },
 
     removeEntityAt(tile) {
-      const { world } = get()
+      const { world, lockedEntityIds } = get()
       const eid = world.tileIndex[`${tile.x},${tile.y}`]
       if (!eid) return
+      if (lockedEntityIds.includes(eid)) return  // locked — cannot remove
       const newWorld = engineRemoveEntity(world, eid)
       _engine?.setState(newWorld)
       set({ world: newWorld })
     },
 
     rotateEntityAt(tile) {
-      const { world } = get()
+      const { world, lockedEntityIds } = get()
       const eid = world.tileIndex[`${tile.x},${tile.y}`]
       if (!eid) return
+      if (lockedEntityIds.includes(eid)) return  // locked — cannot rotate
       const entity = world.entities[eid]
       if (!entity || entity.type !== EntityType.CONVEYOR) return
       const newWorld = updateEntity(world, eid, () => rotateConveyor(entity))
@@ -285,7 +293,7 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
       if (!entry) return
 
       const def = entry.generate()
-      const { world, objectives } = levelDefToWorld(def)
+      const { world, objectives, lockedEntityIds, allowedTools } = levelDefToWorld(def)
       _engine = new TickEngine(world, onTick, get().tickRate)
       set({
         world,
@@ -296,6 +304,8 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
         levelComplete:    false,
         currentLevelId:   entry.id,
         currentLevelName: entry.name,
+        lockedEntityIds,
+        allowedTools,
       })
     },
 
@@ -322,7 +332,7 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
       _engine?.stop()
       _completedObjectiveIds = new Set()
       const def = generate({ seed, difficulty })
-      const { world, objectives } = levelDefToWorld(def)
+      const { world, objectives, lockedEntityIds, allowedTools } = levelDefToWorld(def)
       _engine = new TickEngine(world, onTick, get().tickRate)
       const levelId = `procedural-${seed}-${difficulty}`
       set({
@@ -334,6 +344,8 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
         levelComplete:    false,
         currentLevelId:   levelId,
         currentLevelName: `levels.procedural`,
+        lockedEntityIds,
+        allowedTools,
       })
     },
 
@@ -343,7 +355,7 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
 
       _engine?.stop()
       _completedObjectiveIds = new Set()
-      const { world, objectives } = levelDefToWorld(result.def)
+      const { world, objectives, lockedEntityIds, allowedTools } = levelDefToWorld(result.def)
       _engine = new TickEngine(world, onTick, get().tickRate)
       const levelId = `imported-${result.def.seed}-${result.def.difficulty}`
       set({
@@ -355,6 +367,8 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
         levelComplete:    false,
         currentLevelId:   levelId,
         currentLevelName: null,
+        lockedEntityIds,
+        allowedTools,
       })
       return { success: true }
     },

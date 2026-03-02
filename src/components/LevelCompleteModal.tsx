@@ -5,6 +5,7 @@
 
 import { useTranslation } from 'react-i18next'
 import { useWorldStore }  from '../store/worldStore'
+import { useUiStore }     from '../store/uiStore'
 import { XP_PER_OBJECTIVE } from '../store/playerStore'
 
 export function LevelCompleteModal() {
@@ -14,6 +15,7 @@ export function LevelCompleteModal() {
   const nextLevel     = useWorldStore(s => s.nextLevel)
   const resetSim      = useWorldStore(s => s.resetSim)
   const dismiss       = useWorldStore(s => s.dismissLevelComplete)
+  const openLevelSelect = useUiStore(s => s.openLevelSelect)
 
   if (!levelComplete) return null
 
@@ -52,7 +54,7 @@ export function LevelCompleteModal() {
           </button>
 
           <button
-            onClick={dismiss}
+            onClick={() => { dismiss(); openLevelSelect() }}
             className="w-full px-4 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 text-sm transition-colors"
           >
             {t('levelComplete.backToMenu')}

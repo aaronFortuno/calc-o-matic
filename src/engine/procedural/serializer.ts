@@ -115,7 +115,7 @@ export function importLevel(json: string): ImportResult {
  */
 export function levelDefToWorld(
   def: LevelDefinition,
-): { world: WorldState; objectives: Objective[] } {
+): { world: WorldState; objectives: Objective[]; lockedEntityIds: string[]; allowedTools: string[] | null } {
   let world = createWorld()
 
   for (const raw of def.entities) {
@@ -131,7 +131,12 @@ export function levelDefToWorld(
     world = addObjective(world, { ...obj, completed: false })
   }
 
-  return { world, objectives: def.objectives.map(o => ({ ...o, completed: false })) }
+  return {
+    world,
+    objectives: def.objectives.map(o => ({ ...o, completed: false })),
+    lockedEntityIds: def.lockedEntityIds ?? [],
+    allowedTools: def.allowedTools ?? null,
+  }
 }
 
 /** Reset an entity's live simulation state, preserving its configuration. */

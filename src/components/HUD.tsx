@@ -6,6 +6,7 @@
 import { useTranslation } from 'react-i18next'
 import { useWorldStore }  from '../store/worldStore'
 import { usePlayerStore } from '../store/playerStore'
+import { useUiStore }     from '../store/uiStore'
 
 export function HUD() {
   const { t } = useTranslation()
@@ -23,6 +24,7 @@ export function HUD() {
 
   const xp    = usePlayerStore(s => s.xp)
   const level = usePlayerStore(s => s.level)
+  const openLevelSelect = useUiStore(s => s.openLevelSelect)
 
   const nextLevelXp = level * 100
   const xpInLevel   = xp % 100
@@ -31,13 +33,21 @@ export function HUD() {
   return (
     <header className="absolute top-0 left-16 right-0 h-14 bg-gray-900 border-b border-gray-700 flex items-center px-4 gap-4 z-10">
 
-      {/* Level name */}
-      <div className="flex-shrink-0 text-sm font-semibold text-indigo-300 whitespace-nowrap border-r border-gray-700 pr-3">
-        {currentLevelName
-          ? (currentLevelName === 'levels.procedural'
-              ? t(currentLevelName, { seed, difficulty })
-              : t(currentLevelName))
-          : t('levels.noLevel')}
+      {/* Level name + Levels button */}
+      <div className="flex items-center gap-2 flex-shrink-0 border-r border-gray-700 pr-3">
+        <span className="text-sm font-semibold text-indigo-300 whitespace-nowrap">
+          {currentLevelName
+            ? (currentLevelName === 'levels.procedural'
+                ? t(currentLevelName, { seed, difficulty })
+                : t(currentLevelName))
+            : t('levels.noLevel')}
+        </span>
+        <button
+          onClick={openLevelSelect}
+          className="px-2 py-0.5 rounded text-xs font-semibold bg-gray-700 hover:bg-gray-600 text-gray-300"
+        >
+          {t('levelSelect.title')}
+        </button>
       </div>
 
       {/* Objectives */}

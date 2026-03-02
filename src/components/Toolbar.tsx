@@ -10,6 +10,7 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useUiStore, type ToolType } from '../store/uiStore'
 import { usePlayerStore, OPERATOR_UNLOCK_XP } from '../store/playerStore'
+import { useWorldStore } from '../store/worldStore'
 import { OperatorType } from '../engine/entities/types'
 
 // ---------------------------------------------------------------------------
@@ -44,6 +45,7 @@ export function Toolbar() {
   const selectTool      = useUiStore(s => s.selectTool)
   const unlockedOps     = usePlayerStore(s => s.unlockedOperators)
   const xp              = usePlayerStore(s => s.xp)
+  const allowedTools    = useWorldStore(s => s.allowedTools)
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -63,7 +65,11 @@ export function Toolbar() {
   }, [selectTool, unlockedOps]) // eslint-disable-line react-hooks/exhaustive-deps
 
   function isLocked(tool: ToolType): boolean {
-    if (tool === 'extractor' || tool === 'conveyor' || tool === 'eraser') return false
+    // Eraser is always available
+    if (tool === 'eraser') return false
+    // If allowedTools is set, only listed tools (+ eraser) are available
+    if (allowedTools !== null && !allowedTools.includes(tool)) return true
+    if (tool === 'extractor' || tool === 'conveyor') return false
     return !unlockedOps.includes(tool as OperatorType)
   }
 

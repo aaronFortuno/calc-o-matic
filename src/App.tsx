@@ -6,6 +6,7 @@ import { HUD }                   from './components/HUD'
 import { AdminPanel }            from './components/AdminPanel'
 import { TutorialModal }         from './components/TutorialModal'
 import { LevelCompleteModal }    from './components/LevelCompleteModal'
+import { LevelSelectModal }     from './components/LevelSelectModal'
 import { useWorldStore }         from './store/worldStore'
 
 function App() {
@@ -31,6 +32,7 @@ function App() {
       <AdminPanel />
       <TutorialModal />
       <LevelCompleteModal />
+      <LevelSelectModal />
     </div>
   )
 }

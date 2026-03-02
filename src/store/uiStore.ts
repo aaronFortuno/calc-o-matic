@@ -5,17 +5,10 @@
 // =============================================================================
 
 import { create } from 'zustand'
-import { OperatorType } from '../engine/entities/types'
+import type { ToolType } from '../engine/entities/types'
 
-// ---------------------------------------------------------------------------
-// Tool type — what the player currently has selected in the toolbar
-// ---------------------------------------------------------------------------
-
-export type ToolType =
-  | 'extractor'
-  | 'conveyor'
-  | 'eraser'
-  | OperatorType
+// Re-export ToolType so existing imports from uiStore keep working
+export type { ToolType } from '../engine/entities/types'
 
 // ---------------------------------------------------------------------------
 // State shape
@@ -26,6 +19,7 @@ export interface UiState {
   adminOpen:       boolean
   tutorialVisible: boolean
   tutorialStep:    number   // 0-indexed; max = TUTORIAL_STEPS - 1
+  levelSelectOpen: boolean
 
   // Actions
   selectTool:         (tool: ToolType) => void
@@ -35,6 +29,8 @@ export interface UiState {
   hideTutorial:       () => void
   nextTutorialStep:   () => void
   skipTutorial:       () => void
+  openLevelSelect:    () => void
+  closeLevelSelect:   () => void
 }
 
 export const TUTORIAL_STEPS = 3
@@ -50,6 +46,7 @@ export const useUiStore = create<UiState>()((set) => ({
   adminOpen:       false,
   tutorialVisible: !localStorage.getItem(TUTORIAL_SEEN_KEY),
   tutorialStep:    0,
+  levelSelectOpen: false,
 
   selectTool(tool) {
     set({ selectedTool: tool })
@@ -86,5 +83,13 @@ export const useUiStore = create<UiState>()((set) => ({
   skipTutorial() {
     localStorage.setItem(TUTORIAL_SEEN_KEY, '1')
     set({ tutorialVisible: false, tutorialStep: 0 })
+  },
+
+  openLevelSelect() {
+    set({ levelSelectOpen: true })
+  },
+
+  closeLevelSelect() {
+    set({ levelSelectOpen: false })
   },
 }))

@@ -60,6 +60,9 @@ const COLORS = {
   tokenText:     '#1f2937',
   highlight:     'rgba(99,102,241,0.3)',
   completedBg:   '#14532d',
+  arrowOutput:   '#34d399',
+  arrowInput:    '#60a5fa',
+  lockedBorder:  '#f59e0b',
 }
 
 // ---------------------------------------------------------------------------
@@ -88,6 +91,86 @@ function drawRoundedRect(
   ctx.lineTo(x, y + r)
   ctx.arcTo(x, y, x + r, y, r)
   ctx.closePath()
+}
+
+const ALL_DIRS: ConveyorDirection[] = [
+  ConveyorDirection.UP,
+  ConveyorDirection.DOWN,
+  ConveyorDirection.LEFT,
+  ConveyorDirection.RIGHT,
+]
+
+/**
+ * Draw a small filled triangle on a face of a tile.
+ *   - For output arrows (green): triangle points outward from the face.
+ *   - For input arrows (blue):   triangle points inward into the face.
+ */
+function drawFaceArrow(
+  ctx: CanvasRenderingContext2D,
+  tilePixX: number,   // top-left pixel X of the tile
+  tilePixY: number,   // top-left pixel Y of the tile
+  ts: number,         // tile size in pixels
+  face: ConveyorDirection,
+  isOutput: boolean,
+) {
+  const cx = tilePixX + ts / 2
+  const cy = tilePixY + ts / 2
+  const dist = ts * 0.42   // distance from center to arrow center
+  const size = ts * 0.08   // half-size of the triangle
+
+  // Direction vector for the face
+  const [fdx, fdy] = ARROW_DELTA[face]
+  // Arrow center
+  const ax = cx + fdx * dist
+  const ay = cy + fdy * dist
+
+  // For output arrows, tip points outward; for input arrows, tip points inward
+  const dir = isOutput ? 1 : -1
+  const tipX = ax + fdx * size * dir
+  const tipY = ay + fdy * size * dir
+  const baseX = ax - fdx * size * dir
+  const baseY = ay - fdy * size * dir
+  // Perpendicular
+  const px = -fdy * size
+  const py = fdx * size
+
+  ctx.beginPath()
+  ctx.moveTo(tipX, tipY)
+  ctx.lineTo(baseX + px, baseY + py)
+  ctx.lineTo(baseX - px, baseY - py)
+  ctx.closePath()
+  ctx.fillStyle = isOutput ? COLORS.arrowOutput : COLORS.arrowInput
+  ctx.globalAlpha = 0.85
+  ctx.fill()
+  ctx.globalAlpha = 1
+}
+
+/** Draw a dashed amber border + lock icon on locked entities. */
+function drawLockedIndicator(
+  ctx: CanvasRenderingContext2D,
+  pixX: number,
+  pixY: number,
+  ts: number,
+) {
+  const pad = ts * 0.04
+  ctx.strokeStyle = COLORS.lockedBorder
+  ctx.lineWidth = Math.max(1, ts * 0.03)
+  ctx.setLineDash([ts * 0.06, ts * 0.04])
+  ctx.globalAlpha = 0.6
+  drawRoundedRect(ctx, pixX + pad, pixY + pad, ts - pad * 2, ts - pad * 2, ts * 0.12)
+  ctx.stroke()
+  ctx.setLineDash([])
+  ctx.globalAlpha = 1
+
+  // Small lock icon (top-right corner)
+  const iconSize = Math.max(8, ts * 0.18)
+  ctx.font = `${iconSize}px sans-serif`
+  ctx.textAlign = 'right'
+  ctx.textBaseline = 'top'
+  ctx.fillStyle = COLORS.lockedBorder
+  ctx.globalAlpha = 0.8
+  ctx.fillText('\u{1F512}', pixX + ts - pad * 2, pixY + pad * 2)
+  ctx.globalAlpha = 1
 }
 
 function drawEntity(
@@ -120,6 +203,8 @@ function drawEntity(
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
       ctx.fillText(String(d.value), px.x + ts / 2, px.y + ts / 2)
+      // Output arrow
+      drawFaceArrow(ctx, px.x, px.y, ts, d.outputDirection, true)
       break
     }
 
@@ -207,6 +292,13 @@ function drawEntity(
         ctx.stroke()
         ctx.setLineDash([])
       }
+      // Output arrow + input arrows on other 3 faces
+      drawFaceArrow(ctx, px.x, px.y, ts, d.outputDirection, true)
+      for (const dir of ALL_DIRS) {
+        if (dir !== d.outputDirection) {
+          drawFaceArrow(ctx, px.x, px.y, ts, dir, false)
+        }
+      }
       break
     }
 
@@ -237,6 +329,10 @@ function drawEntity(
         px.x + ts / 2,
         px.y + ts / 2 + ts * 0.18,
       )
+      // Input arrows on all 4 faces
+      for (const dir of ALL_DIRS) {
+        drawFaceArrow(ctx, px.x, px.y, ts, dir, false)
+      }
       break
     }
   }
@@ -302,6 +398,7 @@ export function CanvasRenderer() {
   const removeEntity  = useWorldStore(s => s.removeEntityAt)
   const rotateEntity  = useWorldStore(s => s.rotateEntityAt)
   const selectedTool  = useUiStore(s => s.selectedTool)
+  const lockedEntityIds = useWorldStore(s => s.lockedEntityIds)
 
   // Refs so event handlers always see latest values without re-subscribing
   const worldRef    = useRef(world)
@@ -309,11 +406,13 @@ export function CanvasRenderer() {
   const toolRef     = useRef(selectedTool)
   const tickRateRef = useRef(tickRate)
   const runningRef  = useRef(running)
-  useEffect(() => { worldRef.current    = world        }, [world])
-  useEffect(() => { viewportRef.current = viewport     }, [viewport])
-  useEffect(() => { toolRef.current     = selectedTool }, [selectedTool])
-  useEffect(() => { tickRateRef.current = tickRate     }, [tickRate])
-  useEffect(() => { runningRef.current  = running      }, [running])
+  const lockedRef   = useRef(lockedEntityIds)
+  useEffect(() => { worldRef.current    = world           }, [world])
+  useEffect(() => { viewportRef.current = viewport        }, [viewport])
+  useEffect(() => { toolRef.current     = selectedTool    }, [selectedTool])
+  useEffect(() => { tickRateRef.current = tickRate        }, [tickRate])
+  useEffect(() => { runningRef.current  = running         }, [running])
+  useEffect(() => { lockedRef.current   = lockedEntityIds }, [lockedEntityIds])
 
   // -----------------------------------------------------------------------
   // Token interpolation state — tracks previous positions for smooth lerp
@@ -405,6 +504,7 @@ export function CanvasRenderer() {
     const chunks = getVisibleChunks(vp, w, h)
     const vWorld = worldRef.current
 
+    const locked = lockedRef.current
     for (const chunk of chunks) {
       const tl = chunkTopLeft(chunk)
       for (let dy = 0; dy < 16; dy++) {
@@ -413,6 +513,12 @@ export function CanvasRenderer() {
           const eid = vWorld.tileIndex[key]
           if (eid) {
             drawEntity(ctx, vWorld.entities[eid], vp, vWorld, animTime)
+            // Locked entity indicator
+            if (locked.includes(eid)) {
+              const entity = vWorld.entities[eid]
+              const epx = tileToPixel(entity.position, vp)
+              drawLockedIndicator(ctx, epx.x, epx.y, ts)
+            }
           }
         }
       }

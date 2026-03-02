@@ -149,12 +149,24 @@ export interface Objective {
 
 /** Serialisable level definition — used by the generator and admin import/export. */
 export interface LevelDefinition {
-  version:    number
-  seed:       number
-  difficulty: number
-  entities:   Array<Omit<Entity, never>>  // full entity snapshots
-  objectives: Objective[]
+  version:          number
+  seed:             number
+  difficulty:       number
+  entities:         Array<Omit<Entity, never>>  // full entity snapshots
+  objectives:       Objective[]
+  lockedEntityIds?: string[]    // entities the player cannot erase/rotate
+  allowedTools?:    string[]    // restricts toolbar to these tools only (+ eraser always allowed)
 }
+
+// ---------------------------------------------------------------------------
+// Tool type — what the player currently has selected in the toolbar
+// ---------------------------------------------------------------------------
+
+export type ToolType =
+  | 'extractor'
+  | 'conveyor'
+  | 'eraser'
+  | OperatorType
 
 // ---------------------------------------------------------------------------
 // Placement result (used by world.ts and rules.ts)
