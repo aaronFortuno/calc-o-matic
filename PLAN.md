@@ -1,0 +1,278 @@
+# PLAN.md — calc-o-matic Action Plan
+
+## Overview
+Build a Beltmatic-inspired browser-only educational math puzzle game (MVP) using Vite + React + TypeScript. No backend; all state lives in memory and localStorage.
+
+---
+
+## Phase 0 — Project Bootstrap ✅
+- [x] Scaffold with Vite + React + TypeScript (manual, equivalent to `npm create vite@latest`)
+- [x] Install core dependencies:
+  - `zustand` (state management)
+  - `i18next`, `react-i18next` (i18n)
+  - `tailwindcss`, `postcss`, `autoprefixer` (styling)
+  - `gh-pages` (deployment)
+- [x] Install dev dependencies:
+  - `vitest`, `@vitest/ui`, `@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/user-event`, `@testing-library/jest-dom`
+  - `typescript`, `@types/react`, `@types/react-dom`
+  - `jsdom`
+- [x] Configure `vite.config.ts` (base `/calc-o-matic/`, jsdom test env, `passWithNoTests`, coverage)
+- [x] Configure `tailwind.config.js` and `postcss.config.js`
+- [x] Configure `tsconfig.json` + `tsconfig.app.json` + `tsconfig.node.json` (strict mode)
+- [x] Set up `.gitignore` (node_modules, dist, .claude, *.tsbuildinfo, .idea)
+- [x] Add scripts to `package.json`: `dev`, `build`, `preview`, `test`, `test:ui`, `test:run`, `test:coverage`, `test:e2e`, `deploy`
+- [x] Add `.github/workflows/gh-pages.yml` (auto-deploy on push to `main`)
+- [x] Create `src/main.tsx`, `src/App.tsx`, `src/styles/index.css`, `src/vite-env.d.ts`
+- [x] Create `src/tests/setup.ts` (localStorage mock, rAF mock, jest-dom matchers)
+- [x] Verified: `npm run build` passes, `npm run test:run` exits 0
+- [x] Initial commit pushed to `https://github.com/aaronFortuno/calc-o-matic.git` (branch: `main`)
+
+---
+
+## Phase 1 — Core Type System & Engine Foundations
+- [ ] `src/engine/entities/types.ts` — define all shared TypeScript types:
+  - `EntityType`, `OperatorType`, `ConveyorDirection`
+  - `TileCoord`, `Chunk`, `Token`, `Entity`, `WorldState`
+- [ ] `src/engine/grid.ts` — tile coordinate helpers, chunk math, pan/zoom state
+- [ ] `src/engine/world.ts` — world state, entity registry (add/remove/query entities)
+- [ ] `src/engine/tick.ts` — discrete game loop (tick scheduler, 6–10 ticks/sec, adjustable)
+
+---
+
+## Phase 2 — Entities
+- [ ] `src/engine/entities/extractor.ts` — produces numeric tokens periodically
+- [ ] `src/engine/entities/conveyor.ts` — moves tokens directionally, handles merges (first-in wins)
+- [ ] `src/engine/entities/operator.ts` — base class + implementations:
+  - Basic (unlocked initially): `AddOperator`, `SubOperator`, `MulOperator`, `DivOperator`
+  - Advanced (unlocked later): `SquareOperator`, `SqrtOperator`, `PowerOperator`, `ModOperator`, `GcdOperator`, `FactorOperator`, `IsPrimeOperator`
+- [ ] `src/engine/entities/receiver.ts` — validates incoming tokens against objectives
+
+---
+
+## Phase 3 — Persistence & Procedural Generation
+- [ ] `src/engine/procedural/serializer.ts` — save/load world to localStorage (JSON format); export/import level JSON
+- [ ] `src/engine/procedural/rules.ts` — placement/collision/connectivity rules
+- [ ] `src/engine/procedural/generator.ts` — deterministic procedural level generator (seed + difficulty params); optional Web Worker offload
+
+---
+
+## Phase 4 — i18n
+- [ ] `src/i18n/en.json` — all UI strings, tooltips, tutorial text, error messages
+- [ ] `src/i18n/index.ts` — i18next configuration (language detection, fallback)
+- [ ] Wire `I18nextProvider` in `main.tsx`
+
+---
+
+## Phase 5 — UI Components
+- [ ] `src/ui/CanvasRenderer.tsx` — HTML5 Canvas grid renderer with chunked rendering, pan/zoom, mouse/touch input
+- [ ] `src/components/Toolbar.tsx` — component selector; locked items shown disabled with tooltip unlock hint
+- [ ] `src/components/HUD.tsx` — score, level, objectives, progression bar
+- [ ] `src/components/AdminPanel.tsx` — seed, difficulty, tick speed, export/import level JSON; hidden behind passphrase
+- [ ] `src/components/TutorialModal.tsx` — first-run tutorial overlay with step-by-step instructions
+
+---
+
+## Phase 6 — Game Logic: Levels & Progression
+- [ ] Tutorial Level 1: extractor(2) → conveyor → receiver(2), deliver 3 tokens
+- [ ] Tutorial Level 2 (ADD): extractor(1) + extractor(3) → ADD → receiver(4)
+- [ ] Procedurally generated Level 3+
+- [ ] Progression system: XP award on objective completion; operator unlock thresholds
+- [ ] Persistent player profile in localStorage: `unlockedOperators`, `completedLevels`, `bestScores`
+
+---
+
+## Phase 7 — Tests
+
+> All tests live under `src/tests/`. Run with `npm run test`. Use `vi.useFakeTimers()` wherever real time would be involved. No `Math.random()` — use seeded RNG. Every test must be deterministic and fast.
+
+---
+
+### 7.1 — Engine Unit Tests (pure logic, no React)
+
+#### `src/tests/engine/operator.test.ts`
+- **ADD**: `evaluate([3, 4])` → `7`; `evaluate([0, 0])` → `0`; `evaluate([-1, 5])` → `4`
+- **SUB**: `evaluate([10, 3])` → `7`; `evaluate([3, 10])` → `-7`
+- **MUL**: `evaluate([6, 7])` → `42`; `evaluate([0, 99])` → `0`
+- **DIV**: `evaluate([10, 2])` → `5`; divide-by-zero → returns `null` / emits no token (must not throw)
+- **SQUARE**: `evaluate([5])` → `25`; `evaluate([0])` → `0`
+- **SQRT**: `evaluate([9])` → `3`; `evaluate([2])` → `~1.414` (float allowed); `evaluate([-1])` → `null`
+- **POWER**: `evaluate([2, 10])` → `1024`; `evaluate([0, 0])` → `1` (math convention)
+- **MOD**: `evaluate([10, 3])` → `1`; `evaluate([9, 3])` → `0`; mod-by-zero → `null`
+- **GCD**: `evaluate([12, 8])` → `4`; `evaluate([7, 13])` → `1` (coprime)
+- **FACTOR**: `evaluate([12])` → `[2, 2, 3]` (prime factors in ascending order); `evaluate([1])` → `[]`; `evaluate([7])` → `[7]` (prime)
+- **IS_PRIME**: `evaluate([7])` → `1`; `evaluate([4])` → `0`; `evaluate([1])` → `0`; `evaluate([2])` → `1`
+- **Edge cases**: all operators handle non-integer inputs per defined spec; large numbers (e.g. `evaluate([999983])` for IS_PRIME)
+
+#### `src/tests/engine/tick.test.ts`
+- Single conveyor step: token at position `(0,0)` moves to `(1,0)` after one tick (direction RIGHT)
+- Chain of 3 conveyors: token reaches end after 3 ticks
+- Merge conflict: two tokens arriving at the same segment in the same tick — first-in token advances, second stays queued
+- Conveyor full (capacity 1): token arriving at full segment is held on the previous segment, not dropped
+- Operator processing delay: operator with `delay=2` does not emit until 2 ticks after inputs are consumed
+- Extractor period: extractor with `period=3` emits on ticks 0, 3, 6 and not on ticks 1, 2, 4, 5
+- Receiver validates: token of correct value increments `deliveredCount`; wrong value is rejected (count unchanged)
+- Receiver completes objective: `deliveredCount` reaching `required` triggers objective completion callback
+
+#### `src/tests/engine/grid.test.ts`
+- `tileToChunk({ x: 0, y: 0 })` → `{ cx: 0, cy: 0 }` (CHUNK_SIZE=16)
+- `tileToChunk({ x: 15, y: 15 })` → `{ cx: 0, cy: 0 }`
+- `tileToChunk({ x: 16, y: 0 })` → `{ cx: 1, cy: 0 }`
+- `tileToChunk({ x: -1, y: 0 })` → `{ cx: -1, cy: 0 }` (negative coords)
+- `chunkToPixel` returns correct screen-space rect given viewport offset + zoom
+- `getVisibleChunks(viewport)` returns only chunks overlapping the visible screen rect
+- Zoom clamped to `[MIN_ZOOM, MAX_ZOOM]` — no negative or zero zoom
+- Pan offset arithmetic: double pan right → offset increases by `2 * tileSize * zoom`
+
+#### `src/tests/engine/world.test.ts`
+- `addEntity` adds entity to registry; querying by id returns it
+- `removeEntity` removes entity; querying by id returns `undefined`
+- `getEntityAt({ x, y })` returns correct entity or `null` for empty tile
+- Placing two entities on the same tile is rejected (collision rule enforced)
+- `queryEntitiesByType(EntityType.EXTRACTOR)` returns only extractors
+
+#### `src/tests/engine/rules.test.ts`
+- Placing an entity on an occupied tile returns `{ valid: false, reason: 'OCCUPIED' }`
+- Placing a conveyor adjacent to an operator output is valid
+- Placing an entity out of defined world bounds returns `{ valid: false, reason: 'OUT_OF_BOUNDS' }`
+- An extractor with no connected conveyor on its output side is flagged as `{ connected: false }`
+- A receiver connected correctly to a conveyor chain is flagged as `{ connected: true }`
+
+#### `src/tests/engine/generator.test.ts`
+- Same seed + difficulty always produces identical `LevelDefinition` output (determinism)
+- Different seeds produce different layouts
+- Generated level always contains at least one extractor, one conveyor, one receiver
+- Generated level is solvable: simulate ticks until receiver completes, assert it completes within `MAX_TICKS`
+- Difficulty parameter changes extractor count and operator complexity
+- Generator with `difficulty=0` produces a trivially short conveyor path
+
+#### `src/tests/engine/serializer.test.ts`
+- `exportLevel(world)` returns valid JSON string
+- `importLevel(json)` round-trips: `importLevel(exportLevel(world))` produces identical world state
+- `saveToLocalStorage` + `loadFromLocalStorage` round-trip (mock `localStorage` with `vi.stubGlobal`)
+- Loading from a missing localStorage key returns `null` without throwing
+- Importing malformed JSON returns an error result, does not crash
+
+---
+
+### 7.2 — Store Integration Tests
+
+#### `src/tests/store/playerStore.test.ts`
+- `awardXP(100)` increments player XP correctly
+- XP reaching threshold triggers `unlockOperator` for the correct operator
+- `completeLevel(id)` adds level id to `completedLevels` and does not duplicate on repeated calls
+- Store persists to localStorage on change; re-hydrates on init
+
+#### `src/tests/store/worldStore.test.ts`
+- `placeEntity` updates store and rejects placement on occupied tile
+- `removeEntity` clears the tile and removes associated tokens
+- `setTickSpeed(n)` updates tick interval; scheduler respects new speed
+- Advancing one tick via store action reflects entity state changes (extractor emits, conveyor moves)
+
+---
+
+### 7.3 — Component / UX Tests (React Testing Library)
+
+#### `src/tests/components/Toolbar.test.tsx`
+- Renders all initially unlocked tools as enabled buttons
+- Renders locked tools as disabled buttons with a tooltip containing unlock requirement text
+- Clicking an unlocked tool updates `uiStore.selectedTool`
+- Pressing keyboard number key `1`–`9` selects the corresponding tool
+- Toolbar re-renders when `playerStore.unlockedOperators` changes (new tool becomes enabled)
+
+#### `src/tests/components/HUD.test.tsx`
+- Displays current level name from i18n
+- Displays correct objective description and `delivered / required` progress
+- Progression bar width reflects XP percentage toward next threshold
+- Updates reactively when store state changes
+
+#### `src/tests/components/AdminPanel.test.tsx`
+- Panel is not visible on initial render
+- Opening trigger renders passphrase input field
+- Entering incorrect passphrase shows error, panel stays closed
+- Entering correct passphrase opens the panel
+- Seed and difficulty inputs update generator parameters in the store
+- Clicking **Generate** calls `generator.generate()` with correct params
+- **Export** button triggers a file download (mock `URL.createObjectURL`)
+- **Import** accepts valid level JSON and loads it into the world store; rejects malformed JSON with an error message
+
+#### `src/tests/components/TutorialModal.test.tsx`
+- Renders on first run (no `calc-o-matic:tutorialSeen` key in localStorage)
+- Does not render on subsequent loads when `tutorialSeen` is set
+- **Next** button advances to next step; step counter increments
+- **Skip** button closes the modal and sets `tutorialSeen` in localStorage
+- Last step shows a **Finish** button instead of **Next**; clicking it closes the modal
+
+---
+
+### 7.4 — Accessibility Tests
+
+#### `src/tests/a11y/keyboard.test.ts`
+- Arrow key `ArrowRight` pans viewport offset by `PAN_STEP` pixels
+- Arrow key `ArrowLeft` pans in opposite direction
+- `+` key increases zoom; `-` key decreases zoom; zoom stays within `[MIN_ZOOM, MAX_ZOOM]`
+- `Escape` closes any open modal or panel
+- All interactive buttons have accessible `aria-label` or visible text
+- Toolbar buttons are focusable and activatable via `Enter`/`Space`
+
+---
+
+### 7.5 — i18n Tests
+
+#### `src/tests/i18n/translations.test.ts`
+- Every key present in `en.json` has a non-empty string value
+- No `t('missing.key')` calls in the codebase that are absent from `en.json` (use a key-coverage script or snapshot)
+- `useTranslation` hook returns the correct English string for a known key
+- Switching language (if a second locale is added) updates rendered text without page reload
+
+---
+
+### 7.6 — End-to-End / Smoke Tests (Playwright — optional but recommended)
+
+File: `e2e/tutorial.spec.ts`
+
+- **Tutorial Level 1 full playthrough**: open app → tutorial modal appears → dismiss → select conveyor tool → place conveyors from extractor to receiver → start simulation → receiver completes 3 deliveries → objective complete banner shown
+- **Admin panel access**: navigate to `/#admin` → passphrase prompt → enter correct passphrase → panel opens → seed field is editable
+- **Level export/import round-trip**: export current level → reload page → import JSON → same entities appear on grid
+- **Progression unlock**: complete Tutorial Level 1 → XP awarded → MUL operator becomes enabled in toolbar
+
+---
+
+### 7.7 — Performance / Regression Tests
+
+#### `src/tests/perf/rendering.test.ts`
+- Simulating 1000 ticks with 50 entities completes in under 500 ms (use `performance.now()`)
+- `getVisibleChunks` with a 1920×1080 viewport and zoom=1 returns at most `ceil(1920/tileSize / CHUNK_SIZE + 1) * ceil(1080/tileSize / CHUNK_SIZE + 1)` chunks
+- Token queue does not grow unboundedly after 500 ticks when conveyors are saturated — excess tokens are held or dropped per spec, never accumulate in memory without bound
+
+---
+
+### 7.8 — Test Infrastructure Checklist
+- [ ] `src/tests/setup.ts` — Vitest global setup: mock `localStorage`, mock `requestAnimationFrame`, set fake timers by default
+- [ ] `vitest.config.ts` — coverage thresholds: 80% lines/branches for `src/engine/` and `src/store/`; lower threshold acceptable for UI components
+- [ ] CI step runs `npm run test -- --run` (non-watch) on every PR
+- [ ] Add `npm run test:coverage` script; output to `/coverage`
+- [ ] Add `npm run test:e2e` script for Playwright (separate from unit test run)
+
+---
+
+## Phase 8 — Accessibility & Polish
+- [ ] Keyboard controls: arrow keys to pan, `+`/`-` to zoom, number keys to select toolbar item
+- [ ] Tooltips on hover for all toolbar items
+- [ ] Connectivity highlight when selecting a component
+- [ ] Responsive layout (desktop-first but functional on tablet)
+
+---
+
+## Phase 9 — Build & Deploy
+- [ ] Verify `npm run build` produces `/dist` with correct base path
+- [ ] Test `npm run deploy` via `gh-pages` package
+- [ ] Verify GitHub Actions workflow (optional) auto-deploys on push to `main`
+- [ ] Write final `README.md` deployment section
+
+---
+
+## Recommended Future Improvements (out of scope for MVP)
+- Analytics export for teacher dashboards
+- Multiplayer challenge mode
+- Teacher/admin level editor (drag-and-drop level authoring)
+- Optional server sync (cloud save)

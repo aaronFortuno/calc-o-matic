@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+
+# Claude Code local memory (not for repo)
+.claude/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# IntelliJ / JetBrains
+.idea/
+
+# Build output
+dist/
+dist-ssr/
+
+# Local env files
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# Editor
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
