@@ -29,12 +29,54 @@ function tickN(state: WorldState, n: number): WorldState {
 }
 
 describe('tickWorld', () => {
+  describe('Extractor token spawn', () => {
+    it('mints token on extractor tile first, then pushes to conveyor', () => {
+      // Tick 1: token minted on extractor (0,0), pushed to c1 (1,0) in same tick
+      // Token does NOT move further because preExistingTokenIds prevents it
+      const world = buildWorld([
+        createExtractor('e1', { x: 0, y: 0 }, 5, 1, ConveyorDirection.RIGHT),
+        createConveyor('c1', { x: 1, y: 0 }, ConveyorDirection.RIGHT),
+        createConveyor('c2', { x: 2, y: 0 }, ConveyorDirection.RIGHT),
+        createConveyor('c3', { x: 3, y: 0 }, ConveyorDirection.RIGHT),
+      ])
+
+      // Tick 1: token minted on extractor, pushed to c1
+      const s1 = tickWorld(world)
+      const tokens1 = Object.values(s1.tokens)
+      expect(tokens1).toHaveLength(1)
+      expect(tokens1[0].position).toEqual({ x: 1, y: 0 })
+
+      // Tick 2: token moves to c2
+      const s2 = tickWorld(s1)
+      const first = Object.values(s2.tokens).find(t => t.id === tokens1[0].id)!
+      expect(first.position).toEqual({ x: 2, y: 0 })
+    })
+
+    it('extractor backpressure: does not emit second token while one is on conveyor', () => {
+      // E[5] → C1 (dead end) — conveyor blocked, extractor can still mint on itself
+      // then can't push because c1 is occupied
+      const world = buildWorld([
+        createExtractor('e1', { x: 0, y: 0 }, 5, 1, ConveyorDirection.RIGHT),
+        createConveyor('c1', { x: 1, y: 0 }, ConveyorDirection.RIGHT),
+      ])
+
+      // Tick 1: token on c1
+      const s1 = tickWorld(world)
+      expect(Object.values(s1.tokens)).toHaveLength(1)
+
+      // Tick 2: extractor mints on itself, but c1 blocked so token stays on extractor
+      const s2 = tickWorld(s1)
+      expect(Object.values(s2.tokens)).toHaveLength(2)
+
+      // Tick 3: extractor tile occupied → no third token minted
+      const s3 = tickWorld(s2)
+      expect(Object.values(s3.tokens)).toHaveLength(2)
+    })
+  })
+
   describe('Conveyors', () => {
     it('moves a token one tile per tick', () => {
       // E[5] → C1 → C2 → C3 → C4 → C5
-      // Tick order: extractors emit → conveyors move. Freshly minted tokens
-      // do NOT move on the same tick they are emitted (same-tick prevention).
-      // So after tick 1, the token sits on c1.  After tick 2, it moves to c2.
       const world = buildWorld([
         createExtractor('e1', { x: 0, y: 0 }, 5, 1, ConveyorDirection.RIGHT),
         createConveyor('c1', { x: 1, y: 0 }, ConveyorDirection.RIGHT),
@@ -44,7 +86,7 @@ describe('tickWorld', () => {
         createConveyor('c5', { x: 5, y: 0 }, ConveyorDirection.RIGHT),
       ])
 
-      // Tick 1: extractor emits onto c1, token stays at c1 (same-tick prevention)
+      // Tick 1: token minted on extractor, pushed to c1 (same tick)
       const s1 = tickWorld(world)
       const tokens1 = Object.values(s1.tokens)
       expect(tokens1).toHaveLength(1)
@@ -63,10 +105,11 @@ describe('tickWorld', () => {
         createConveyor('c1', { x: 1, y: 0 }, ConveyorDirection.RIGHT),
       ])
 
-      const s1 = tickWorld(world) // emit
+      const s1 = tickWorld(world) // emit + push
       const s2 = tickWorld(s1)    // can't move — nothing at (2,0)
-      const tokens = Object.values(s2.tokens)
-      expect(tokens[0].position).toEqual({ x: 1, y: 0 })
+      // One token on c1, another minted on extractor (period=1)
+      const c1Token = Object.values(s2.tokens).find(t => t.position.x === 1 && t.position.y === 0)
+      expect(c1Token).toBeDefined()
     })
   })
 

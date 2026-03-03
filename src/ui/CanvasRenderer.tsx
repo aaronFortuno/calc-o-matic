@@ -21,6 +21,7 @@ import {
   getVisibleChunks,
   chunkTopLeft,
   tileToPixel,
+  tileKey,
   pixelToTile,
 } from '../engine/grid'
 import { EntityType, ConveyorDirection } from '../engine/entities/types'
@@ -99,6 +100,39 @@ const ALL_DIRS: ConveyorDirection[] = [
   ConveyorDirection.LEFT,
   ConveyorDirection.RIGHT,
 ]
+
+const OPPOSITE_DIR: Record<ConveyorDirection, ConveyorDirection> = {
+  [ConveyorDirection.UP]:    ConveyorDirection.DOWN,
+  [ConveyorDirection.DOWN]:  ConveyorDirection.UP,
+  [ConveyorDirection.LEFT]:  ConveyorDirection.RIGHT,
+  [ConveyorDirection.RIGHT]: ConveyorDirection.LEFT,
+}
+
+/** Find which direction feeds INTO this conveyor from a neighbor. */
+function getIncomingDirection(
+  entity: Entity,
+  world: WorldState,
+): ConveyorDirection | null {
+  for (const dir of ALL_DIRS) {
+    const [dx, dy] = ARROW_DELTA[dir]
+    const neighborKey = tileKey({ x: entity.position.x + dx, y: entity.position.y + dy })
+    const neid = world.tileIndex[neighborKey]
+    if (!neid) continue
+    const neighbor = world.entities[neid]
+    if (!neighbor) continue
+
+    // The neighbor must point toward this tile (i.e. neighbor's output = opposite of dir)
+    const neededDir = OPPOSITE_DIR[dir]
+    if (neighbor.type === EntityType.CONVEYOR) {
+      if ((neighbor.data as ConveyorData).direction === neededDir) return dir
+    } else if (neighbor.type === EntityType.EXTRACTOR) {
+      if ((neighbor.data as ExtractorData).outputDirection === neededDir) return dir
+    } else if (neighbor.type === EntityType.OPERATOR) {
+      if ((neighbor.data as OperatorData).outputDirection === neededDir) return dir
+    }
+  }
+  return null
+}
 
 /**
  * Draw a small filled triangle on a face of a tile.
@@ -198,11 +232,14 @@ function drawEntity(
       ctx.strokeStyle = COLORS.extractor
       ctx.lineWidth = 2
       ctx.stroke()
-      ctx.fillStyle = COLORS.extractor
-      ctx.font = `bold ${Math.max(10, ts * 0.28)}px monospace`
-      ctx.textAlign = 'center'
-      ctx.textBaseline = 'middle'
-      ctx.fillText(String(d.value), px.x + ts / 2, px.y + ts / 2)
+      // Hide value label when a token sits on the extractor (prevents overlap)
+      if (!world.tokenTileIndex[tileKey(entity.position)]) {
+        ctx.fillStyle = COLORS.extractor
+        ctx.font = `bold ${Math.max(10, ts * 0.28)}px monospace`
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(String(d.value), px.x + ts / 2, px.y + ts / 2)
+      }
       // Output arrow
       drawFaceArrow(ctx, px.x, px.y, ts, d.outputDirection, true)
       break
@@ -210,62 +247,182 @@ function drawEntity(
 
     case EntityType.CONVEYOR: {
       const d     = entity.data as ConveyorData
-      const [adx, ady] = ARROW_DELTA[d.direction]
+      const outDir = d.direction
+      const [adx, ady] = ARROW_DELTA[outDir]
       const cx  = px.x + ts / 2
       const cy  = px.y + ts / 2
 
-      // Belt track background
-      const isHorizontal = d.direction === ConveyorDirection.LEFT || d.direction === ConveyorDirection.RIGHT
-      const trackW = isHorizontal ? w : w * 0.55
-      const trackH = isHorizontal ? h * 0.55 : h
-      const trackX = px.x + (ts - trackW) / 2
-      const trackY = px.y + (ts - trackH) / 2
+      // Detect corner: check if upstream feeds from a 90-degree angle
+      const inDir = getIncomingDirection(entity, world)
+      const isCorner = inDir !== null
+        && inDir !== outDir
+        && inDir !== OPPOSITE_DIR[outDir]
 
-      ctx.fillStyle = COLORS.conveyor
-      drawRoundedRect(ctx, trackX, trackY, trackW, trackH, ts * 0.06)
-      ctx.fill()
+      if (isCorner) {
+        // --- L-shaped corner belt ---
+        const beltW = w * 0.55  // belt width (same as straight belt)
+        const halfBelt = beltW / 2
 
-      // Animated dashes moving in belt direction
-      const dashLen  = ts * 0.12
-      const gapLen   = ts * 0.18
-      const speed    = ts * 0.4
-      const offset   = (animTime * speed) % (dashLen + gapLen)
-      const lineLen  = isHorizontal ? trackW : trackH
+        // inDir is the side the token comes FROM; outDir is where it goes
+        // Arm 1: from inDir side to center
+        // Arm 2: from center to outDir side
+        const [idx, idy] = ARROW_DELTA[inDir!]
+        const [odx, ody] = ARROW_DELTA[outDir]
 
-      ctx.strokeStyle = COLORS.conveyorDash
-      ctx.lineWidth   = Math.max(1, ts * 0.04)
-      ctx.lineCap     = 'round'
+        // Arm rectangles: each arm goes from the tile edge to the center
+        // Arm 1 (input arm): perpendicular to inDir
+        const arm1IsH = idy === 0 // input arm is horizontal if inDir is LEFT/RIGHT
+        // Arm 2 (output arm): perpendicular to outDir
+        const arm2IsH = ody === 0
 
-      // Draw two rows of dashes (edges of belt)
-      for (const edge of [-1, 1]) {
-        const perpDist = (isHorizontal ? trackH : trackW) * 0.32 * edge
-        ctx.beginPath()
-        const dashStart = -dashLen + (adx > 0 || ady > 0 ? offset : (dashLen + gapLen) - offset)
-        for (let d = dashStart; d < lineLen; d += dashLen + gapLen) {
-          const startD = Math.max(0, d)
-          const endD   = Math.min(lineLen, d + dashLen)
-          if (endD <= startD) continue
-          if (isHorizontal) {
-            ctx.moveTo(trackX + startD, cy + perpDist)
-            ctx.lineTo(trackX + endD,   cy + perpDist)
-          } else {
-            ctx.moveTo(cx + perpDist, trackY + startD)
-            ctx.lineTo(cx + perpDist, trackY + endD)
-          }
+        // Draw two arms as filled rectangles meeting at center
+        ctx.fillStyle = COLORS.conveyor
+
+        // Input arm: from edge on inDir side to center
+        if (arm1IsH) {
+          const armX = idx > 0 ? px.x + ts : cx  // from right edge or left edge
+          const armW = idx > 0 ? cx - (px.x + ts) : px.x - cx
+          ctx.fillRect(Math.min(armX, armX - armW), cy - halfBelt, Math.abs(armW) || (ts / 2), beltW)
+        } else {
+          const armY = idy > 0 ? px.y + ts : cy
+          const armH = idy > 0 ? cy - (px.y + ts) : px.y - cy
+          ctx.fillRect(cx - halfBelt, Math.min(armY, armY - armH), beltW, Math.abs(armH) || (ts / 2))
         }
-        ctx.stroke()
-      }
 
-      // Center chevron arrow
-      const arrLen = ts * 0.16
-      const arrW   = ts * 0.10
-      ctx.beginPath()
-      ctx.moveTo(cx + adx * arrLen, cy + ady * arrLen)
-      ctx.lineTo(cx - adx * arrLen * 0.5 + (-ady) * arrW, cy - ady * arrLen * 0.5 + adx * arrW)
-      ctx.lineTo(cx - adx * arrLen * 0.5 - (-ady) * arrW, cy - ady * arrLen * 0.5 - adx * arrW)
-      ctx.closePath()
-      ctx.fillStyle = COLORS.conveyorTrack
-      ctx.fill()
+        // Output arm: from center to edge on outDir side
+        if (arm2IsH) {
+          const armX = odx > 0 ? cx : px.x
+          const armW = odx > 0 ? (px.x + ts) - cx : cx - px.x
+          ctx.fillRect(armX, cy - halfBelt, armW, beltW)
+        } else {
+          const armY = ody > 0 ? cy : px.y
+          const armH = ody > 0 ? (px.y + ts) - cy : cy - px.y
+          ctx.fillRect(cx - halfBelt, armY, beltW, armH)
+        }
+
+        // Center square (fills the junction)
+        ctx.fillRect(cx - halfBelt, cy - halfBelt, beltW, beltW)
+
+        // Animated dashes along each arm
+        const dashLen  = ts * 0.12
+        const gapLen   = ts * 0.18
+        const speed    = ts * 0.4
+        const offset   = (animTime * speed) % (dashLen + gapLen)
+
+        ctx.strokeStyle = COLORS.conveyorDash
+        ctx.lineWidth   = Math.max(1, ts * 0.04)
+        ctx.lineCap     = 'round'
+
+        // Input arm dashes
+        const inLen = ts / 2
+        for (const edge of [-1, 1]) {
+          const perpDist = halfBelt * 0.58 * edge
+          ctx.beginPath()
+          const dStart = -dashLen + offset
+          for (let dd = dStart; dd < inLen; dd += dashLen + gapLen) {
+            const s0 = Math.max(0, dd)
+            const s1 = Math.min(inLen, dd + dashLen)
+            if (s1 <= s0) continue
+            if (arm1IsH) {
+              const baseX = idx > 0 ? px.x + ts - inLen : px.x
+              ctx.moveTo(baseX + (idx > 0 ? inLen - s1 : s0), cy + perpDist)
+              ctx.lineTo(baseX + (idx > 0 ? inLen - s0 : s1), cy + perpDist)
+            } else {
+              const baseY = idy > 0 ? px.y + ts - inLen : px.y
+              ctx.moveTo(cx + perpDist, baseY + (idy > 0 ? inLen - s1 : s0))
+              ctx.lineTo(cx + perpDist, baseY + (idy > 0 ? inLen - s0 : s1))
+            }
+          }
+          ctx.stroke()
+        }
+
+        // Output arm dashes
+        const outLen = ts / 2
+        for (const edge of [-1, 1]) {
+          const perpDist = halfBelt * 0.58 * edge
+          ctx.beginPath()
+          const dStart = -dashLen + offset
+          for (let dd = dStart; dd < outLen; dd += dashLen + gapLen) {
+            const s0 = Math.max(0, dd)
+            const s1 = Math.min(outLen, dd + dashLen)
+            if (s1 <= s0) continue
+            if (arm2IsH) {
+              const baseX = odx > 0 ? cx : px.x
+              ctx.moveTo(baseX + (odx > 0 ? s0 : outLen - s1), cy + perpDist)
+              ctx.lineTo(baseX + (odx > 0 ? s1 : outLen - s0), cy + perpDist)
+            } else {
+              const baseY = ody > 0 ? cy : px.y
+              ctx.moveTo(cx + perpDist, baseY + (ody > 0 ? s0 : outLen - s1))
+              ctx.lineTo(cx + perpDist, baseY + (ody > 0 ? s1 : outLen - s0))
+            }
+          }
+          ctx.stroke()
+        }
+
+        // Center chevron arrow (pointing in outDir)
+        const arrLen = ts * 0.16
+        const arrW   = ts * 0.10
+        ctx.beginPath()
+        ctx.moveTo(cx + adx * arrLen, cy + ady * arrLen)
+        ctx.lineTo(cx - adx * arrLen * 0.5 + (-ady) * arrW, cy - ady * arrLen * 0.5 + adx * arrW)
+        ctx.lineTo(cx - adx * arrLen * 0.5 - (-ady) * arrW, cy - ady * arrLen * 0.5 - adx * arrW)
+        ctx.closePath()
+        ctx.fillStyle = COLORS.conveyorTrack
+        ctx.fill()
+      } else {
+        // --- Straight belt (unchanged) ---
+        const isHorizontal = outDir === ConveyorDirection.LEFT || outDir === ConveyorDirection.RIGHT
+        const trackW = isHorizontal ? w : w * 0.55
+        const trackH = isHorizontal ? h * 0.55 : h
+        const trackX = px.x + (ts - trackW) / 2
+        const trackY = px.y + (ts - trackH) / 2
+
+        ctx.fillStyle = COLORS.conveyor
+        drawRoundedRect(ctx, trackX, trackY, trackW, trackH, ts * 0.06)
+        ctx.fill()
+
+        // Animated dashes moving in belt direction
+        const dashLen  = ts * 0.12
+        const gapLen   = ts * 0.18
+        const speed    = ts * 0.4
+        const offset   = (animTime * speed) % (dashLen + gapLen)
+        const lineLen  = isHorizontal ? trackW : trackH
+
+        ctx.strokeStyle = COLORS.conveyorDash
+        ctx.lineWidth   = Math.max(1, ts * 0.04)
+        ctx.lineCap     = 'round'
+
+        // Draw two rows of dashes (edges of belt)
+        for (const edge of [-1, 1]) {
+          const perpDist = (isHorizontal ? trackH : trackW) * 0.32 * edge
+          ctx.beginPath()
+          const dashStart = -dashLen + (adx > 0 || ady > 0 ? offset : (dashLen + gapLen) - offset)
+          for (let dd = dashStart; dd < lineLen; dd += dashLen + gapLen) {
+            const startD = Math.max(0, dd)
+            const endD   = Math.min(lineLen, dd + dashLen)
+            if (endD <= startD) continue
+            if (isHorizontal) {
+              ctx.moveTo(trackX + startD, cy + perpDist)
+              ctx.lineTo(trackX + endD,   cy + perpDist)
+            } else {
+              ctx.moveTo(cx + perpDist, trackY + startD)
+              ctx.lineTo(cx + perpDist, trackY + endD)
+            }
+          }
+          ctx.stroke()
+        }
+
+        // Center chevron arrow
+        const arrLen = ts * 0.16
+        const arrW   = ts * 0.10
+        ctx.beginPath()
+        ctx.moveTo(cx + adx * arrLen, cy + ady * arrLen)
+        ctx.lineTo(cx - adx * arrLen * 0.5 + (-ady) * arrW, cy - ady * arrLen * 0.5 + adx * arrW)
+        ctx.lineTo(cx - adx * arrLen * 0.5 - (-ady) * arrW, cy - ady * arrLen * 0.5 - adx * arrW)
+        ctx.closePath()
+        ctx.fillStyle = COLORS.conveyorTrack
+        ctx.fill()
+      }
       break
     }
 

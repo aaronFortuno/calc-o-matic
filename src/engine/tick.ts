@@ -2,9 +2,10 @@
 // tick.ts — Discrete game loop: one tick advances the whole simulation.
 //
 // Tick order each step:
-//   1. tickExtractors  — emit tokens onto output conveyors
-//   2. tickConveyors   — move tokens forward; deposit into operators/receivers
-//   3. tickOperators   — count down, evaluate, enqueue output tokens
+//   1. tickExtractors      — mint tokens on extractor tile
+//   2. tickExtractorTokens — push extractor tokens → first conveyor
+//   3. tickConveyors       — move tokens forward; deposit into operators/receivers
+//   4. tickOperators       — count down, evaluate, enqueue output tokens
 //
 // All sub-functions are pure (WorldState in → WorldState out).
 // The TickEngine class wraps them in a setInterval scheduler.
@@ -69,7 +70,7 @@ function moveToken(state: WorldState, tokenId: string, to: TileCoord): WorldStat
 }
 
 // ---------------------------------------------------------------------------
-// 1. Extractors — emit one token per period onto their output conveyor
+// 1. Extractors — mint token on the extractor tile itself
 // ---------------------------------------------------------------------------
 
 function tickExtractors(state: WorldState): WorldState {
@@ -89,16 +90,19 @@ function tickExtractors(state: WorldState): WorldState {
         },
       }
     } else {
-      // Try to emit a token onto the output tile
+      // Mint token on the extractor's own tile (not the conveyor).
+      // Backpressure: skip if the extractor tile already has a token.
+      // Still require a valid output conveyor to exist.
+      const extKey     = tileKey(entity.position)
       const delta      = DIRECTION_DELTA[data.outputDirection]
       const outputTile = { x: entity.position.x + delta.x, y: entity.position.y + delta.y }
       const outputKey  = tileKey(outputTile)
       const targetId   = s.tileIndex[outputKey]
 
-      if (targetId && !s.tokenTileIndex[outputKey]) {
+      if (targetId && !s.tokenTileIndex[extKey]) {
         const target = s.entities[targetId]
         if (target?.type === EntityType.CONVEYOR) {
-          s = mintToken(s, data.value, outputTile)
+          s = mintToken(s, data.value, entity.position)
         }
       }
 
@@ -110,6 +114,36 @@ function tickExtractors(state: WorldState): WorldState {
           ...s.entities,
           [entity.id]: { ...entity, data: { ...data, ticksUntilNext: data.period - 1 } },
         },
+      }
+    }
+  }
+
+  return s
+}
+
+// ---------------------------------------------------------------------------
+// 1b. Push extractor tokens → first conveyor
+// ---------------------------------------------------------------------------
+
+function tickExtractorTokens(state: WorldState): WorldState {
+  let s = state
+
+  for (const entity of Object.values(s.entities)) {
+    if (entity.type !== EntityType.EXTRACTOR) continue
+    const data   = entity.data as ExtractorData
+    const extKey = tileKey(entity.position)
+    const tokId  = s.tokenTileIndex[extKey]
+    if (!tokId) continue // no token sitting on this extractor
+
+    const delta      = DIRECTION_DELTA[data.outputDirection]
+    const outputTile = { x: entity.position.x + delta.x, y: entity.position.y + delta.y }
+    const outputKey  = tileKey(outputTile)
+
+    // Move to conveyor only if that tile is unoccupied
+    if (!s.tokenTileIndex[outputKey]) {
+      const targetId = s.tileIndex[outputKey]
+      if (targetId && s.entities[targetId]?.type === EntityType.CONVEYOR) {
+        s = moveToken(s, tokId, outputTile)
       }
     }
   }
@@ -336,9 +370,10 @@ export function tickWorld(state: WorldState): WorldState {
   // glitch where tokens appear to "skip" the first conveyor tile.
   const preExistingTokenIds = new Set(Object.keys(state.tokens))
 
-  let s = tickExtractors(state)
-  s     = tickConveyors(s, preExistingTokenIds)
-  s     = tickOperators(s)
+  let s = tickExtractors(state)        // 1. mint on extractor tile
+  s     = tickExtractorTokens(s)       // 2. push extractor → first conveyor
+  s     = tickConveyors(s, preExistingTokenIds) // 3. move along belt
+  s     = tickOperators(s)             // 4. process operators
   return { ...s, tickCount: s.tickCount + 1 }
 }
 
