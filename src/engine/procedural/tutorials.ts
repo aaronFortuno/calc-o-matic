@@ -62,8 +62,9 @@ export function tutorialLevel2(): LevelDefinition {
     createOperator ('o1', { x: 2, y:  0 }, OperatorType.ADD, ConveyorDirection.RIGHT, 1),
     createConveyor ('c2', { x: 3, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 4, y:  0 }, 4, 3),
-    createExtractor('e2', { x: 2, y: -2 }, 3, 3, ConveyorDirection.DOWN),
-    createConveyor ('c3', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, 3, 3, ConveyorDirection.DOWN),
+    createConveyor ('c3', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 2, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -92,7 +93,7 @@ export function tutorialLevel3(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 3, 3, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 4, y:  0 }, 12, 3),
-    createExtractor('e2', { x: 2, y: -2 }, 4, 3, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, 4, 3, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -122,7 +123,7 @@ export function tutorialLevel4(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 10, 3, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 4, y:  0 }, 7, 3),
-    createExtractor('e2', { x: 2, y: -2 }, 3, 3, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, 3, 3, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -152,7 +153,7 @@ export function tutorialLevel5(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 12, 3, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 4, y:  0 }, 3, 3),
-    createExtractor('e2', { x: 2, y: -2 }, 4, 3, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, 4, 3, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -182,8 +183,8 @@ export function tutorialLevel6(): LevelDefinition {
   const entities: Entity[] = [
     createExtractor('e1', { x: 0, y:  0 }, 2, 3, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, 14, 3),
-    createExtractor('e2', { x: 2, y: -2 }, 5, 3, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 4, y: -2 }, 4, 3, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, 5, 3, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 4, y: -3 }, 4, 3, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{

@@ -143,8 +143,9 @@ function genD1(rng: SeededRNG): LevelDefinition {
     createConveyor ('c2', { x: 3, y:  0 }, ConveyorDirection.RIGHT),
     createConveyor ('c3', { x: 4, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 5, y:  0 }, result, 3),
-    createExtractor('e2', { x: 2, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 2, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   const sym = opSymbol(opType)
@@ -181,10 +182,12 @@ function genD2(rng: SeededRNG): LevelDefinition {
     createOperator ('o2', { x: 4, y:  0 }, op2, ConveyorDirection.RIGHT, 1),
     createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, result, 3),
-    createExtractor('e2', { x: 2, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 2, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 4, y: -2 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 4, y: -3 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c7', { x: 4, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   const objectives: Objective[] = [{
@@ -233,8 +236,9 @@ function genD3_squareAdd(rng: SeededRNG): LevelDefinition {
     createOperator ('o2', { x: 4, y:  0 }, OperatorType.ADD, ConveyorDirection.RIGHT, 1),
     createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, result, 3),
-    createExtractor('e2', { x: 4, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 4, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 3, entities, result)
@@ -255,8 +259,9 @@ function genD3_sqrtAdd(rng: SeededRNG): LevelDefinition {
     createOperator ('o2', { x: 4, y:  0 }, OperatorType.ADD, ConveyorDirection.RIGHT, 1),
     createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, result, 3),
-    createExtractor('e2', { x: 4, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 4, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 3, entities, result)
@@ -277,10 +282,12 @@ function genD3_mulSub(rng: SeededRNG): LevelDefinition {
     createOperator ('o2', { x: 4, y:  0 }, OperatorType.SUB, ConveyorDirection.RIGHT, 1),
     createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, result, 3),
-    createExtractor('e2', { x: 2, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 2, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 4, y: -2 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 4, y: -3 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c7', { x: 4, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 3, entities, result)
@@ -301,10 +308,12 @@ function genD3_addMod(rng: SeededRNG): LevelDefinition {
     createOperator ('o2', { x: 4, y:  0 }, OperatorType.MOD, ConveyorDirection.RIGHT, 1),
     createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, result, 3),
-    createExtractor('e2', { x: 2, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 2, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 4, y: -2 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 4, y: -3 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c7', { x: 4, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 3, entities, result)
@@ -331,10 +340,12 @@ function genD3_mulDiv(rng: SeededRNG): LevelDefinition {
     createOperator ('o2', { x: 4, y:  0 }, OperatorType.DIV, ConveyorDirection.RIGHT, 1),
     createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, result, 3),
-    createExtractor('e2', { x: 2, y: -2 }, bInt, 3, ConveyorDirection.DOWN),
-    createConveyor ('c4', { x: 2, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 4, y: -2 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, bInt, 3, ConveyorDirection.DOWN),
+    createConveyor ('c4', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 4, y: -3 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c7', { x: 4, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 3, entities, result)
@@ -382,12 +393,15 @@ function genD4_squareMinusProduct(rng: SeededRNG): LevelDefinition {
     createConveyor ('c3', { x: 5, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 6, y:  0 }, result, 3),
     // MUL feed from below
-    createExtractor('e2', { x: 2, y:  2 }, b, 3, ConveyorDirection.RIGHT),
-    createConveyor ('c4', { x: 3, y:  2 }, ConveyorDirection.RIGHT),
-    createOperator ('o3', { x: 4, y:  2 }, OperatorType.MUL, ConveyorDirection.UP, 1),
-    createConveyor ('c5', { x: 4, y:  1 }, ConveyorDirection.UP),
-    createExtractor('e3', { x: 4, y:  4 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c6', { x: 4, y:  3 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 1, y:  3 }, b, 3, ConveyorDirection.RIGHT),
+    createConveyor ('c4', { x: 2, y:  3 }, ConveyorDirection.RIGHT),
+    createConveyor ('c7', { x: 3, y:  3 }, ConveyorDirection.RIGHT),
+    createOperator ('o3', { x: 4, y:  3 }, OperatorType.MUL, ConveyorDirection.UP, 1),
+    createConveyor ('c5', { x: 4, y:  2 }, ConveyorDirection.UP),
+    createConveyor ('c8', { x: 4, y:  1 }, ConveyorDirection.UP),
+    createExtractor('e3', { x: 4, y:  6 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 4, y:  5 }, ConveyorDirection.DOWN),
+    createConveyor ('c9', { x: 4, y:  4 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 4, entities, result)
@@ -411,12 +425,15 @@ function genD4_sumTimesMinusD(rng: SeededRNG): LevelDefinition {
     createOperator ('o3', { x: 6, y:  0 }, OperatorType.SUB, ConveyorDirection.RIGHT, 1),
     createConveyor ('c4', { x: 7, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 8, y:  0 }, result, 3),
-    createExtractor('e2', { x: 2, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 2, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 4, y: -2 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c6', { x: 4, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e4', { x: 6, y: -2 }, d, 3, ConveyorDirection.DOWN),
-    createConveyor ('c7', { x: 6, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c8', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 4, y: -3 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c9', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e4', { x: 6, y: -3 }, d, 3, ConveyorDirection.DOWN),
+    createConveyor ('c7', { x: 6, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c10', { x: 6, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 4, entities, result)
@@ -442,10 +459,12 @@ function genD4_sqrtProduct(rng: SeededRNG): LevelDefinition {
     createOperator ('o3', { x: 6, y:  0 }, OperatorType.ADD, ConveyorDirection.RIGHT, 1),
     createConveyor ('c4', { x: 7, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 8, y:  0 }, result, 3),
-    createExtractor('e2', { x: 2, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 2, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 6, y: -2 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c6', { x: 6, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 2, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 2, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c7', { x: 2, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 6, y: -3 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 6, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c8', { x: 6, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 4, entities, result)
@@ -472,10 +491,12 @@ function genD4_squareDivAdd(rng: SeededRNG): LevelDefinition {
     createOperator ('o3', { x: 6, y:  0 }, OperatorType.ADD, ConveyorDirection.RIGHT, 1),
     createConveyor ('c4', { x: 7, y:  0 }, ConveyorDirection.RIGHT),
     createReceiver ('r1', { x: 8, y:  0 }, result, 3),
-    createExtractor('e2', { x: 4, y: -2 }, b, 3, ConveyorDirection.DOWN),
-    createConveyor ('c5', { x: 4, y: -1 }, ConveyorDirection.DOWN),
-    createExtractor('e3', { x: 6, y: -2 }, c, 3, ConveyorDirection.DOWN),
-    createConveyor ('c6', { x: 6, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e2', { x: 4, y: -3 }, b, 3, ConveyorDirection.DOWN),
+    createConveyor ('c5', { x: 4, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c7', { x: 4, y: -1 }, ConveyorDirection.DOWN),
+    createExtractor('e3', { x: 6, y: -3 }, c, 3, ConveyorDirection.DOWN),
+    createConveyor ('c6', { x: 6, y: -2 }, ConveyorDirection.DOWN),
+    createConveyor ('c8', { x: 6, y: -1 }, ConveyorDirection.DOWN),
   ]
 
   return makeLevel(rng, 4, entities, result)

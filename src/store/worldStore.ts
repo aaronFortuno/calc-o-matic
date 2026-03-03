@@ -10,7 +10,7 @@ import { create } from 'zustand'
 import type { WorldState, Entity, TileCoord, Objective, Viewport } from '../engine/entities/types'
 import { EntityType, ConveyorDirection } from '../engine/entities/types'
 import { createWorld, addEntity, removeEntity as engineRemoveEntity, updateEntity } from '../engine/world'
-import { createViewport, panViewport, zoomViewport } from '../engine/grid'
+import { createViewport, panViewport, zoomViewport, centerViewportOnEntities } from '../engine/grid'
 import { TickEngine } from '../engine/tick'
 import { validatePlacement } from '../engine/procedural/rules'
 import { generate }         from '../engine/procedural/generator'
@@ -113,6 +113,16 @@ function getAdminPass(): string {
   return localStorage.getItem(ADMIN_PASS_KEY) ?? 'admin'
 }
 
+/** Compute a viewport centered on all entities in a world. */
+function centeredViewport(world: WorldState): Viewport {
+  const positions = Object.values(world.entities).map(e => e.position)
+  return centerViewportOnEntities(
+    positions,
+    window.innerWidth,
+    window.innerHeight,
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
@@ -209,7 +219,7 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
       const def = catalogEntry ? catalogEntry.generate() : generate({ seed, difficulty })
       const { world, objectives, lockedEntityIds, allowedTools } = levelDefToWorld(def)
       _engine = new TickEngine(world, onTick, get().tickRate)
-      set({ world, objectives, running: false, levelComplete: false, lockedEntityIds, allowedTools })
+      set({ world, viewport: centeredViewport(world), objectives, running: false, levelComplete: false, lockedEntityIds, allowedTools })
     },
 
     // -----------------------------------------------------------------------
@@ -297,6 +307,7 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
       _engine = new TickEngine(world, onTick, get().tickRate)
       set({
         world,
+        viewport:         centeredViewport(world),
         objectives,
         seed:             def.seed,
         difficulty:       def.difficulty,
@@ -337,6 +348,7 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
       const levelId = `procedural-${seed}-${difficulty}`
       set({
         world,
+        viewport:         centeredViewport(world),
         objectives,
         seed,
         difficulty,
@@ -360,6 +372,7 @@ export const useWorldStore = create<WorldStore>()((set, get) => {
       const levelId = `imported-${result.def.seed}-${result.def.difficulty}`
       set({
         world,
+        viewport:         centeredViewport(world),
         objectives,
         seed:             result.def.seed,
         difficulty:       result.def.difficulty,

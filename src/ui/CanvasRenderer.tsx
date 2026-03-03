@@ -263,41 +263,40 @@ function drawEntity(
         const beltW = w * 0.55  // belt width (same as straight belt)
         const halfBelt = beltW / 2
 
-        // inDir is the side the token comes FROM; outDir is where it goes
-        // Arm 1: from inDir side to center
-        // Arm 2: from center to outDir side
         const [idx, idy] = ARROW_DELTA[inDir!]
         const [odx, ody] = ARROW_DELTA[outDir]
 
-        // Arm rectangles: each arm goes from the tile edge to the center
-        // Arm 1 (input arm): perpendicular to inDir
-        const arm1IsH = idy === 0 // input arm is horizontal if inDir is LEFT/RIGHT
-        // Arm 2 (output arm): perpendicular to outDir
+        const arm1IsH = idy === 0
         const arm2IsH = ody === 0
 
-        // Draw two arms as filled rectangles meeting at center
+        // Padded tile edges (consistent with straight belt padding)
+        const edgeL = px.x + pad
+        const edgeR = px.x + ts - pad
+        const edgeT = px.y + pad
+        const edgeB = px.y + ts - pad
+
         ctx.fillStyle = COLORS.conveyor
 
-        // Input arm: from edge on inDir side to center
+        // Input arm: from padded edge on inDir side to center
         if (arm1IsH) {
-          const armX = idx > 0 ? px.x + ts : cx  // from right edge or left edge
-          const armW = idx > 0 ? cx - (px.x + ts) : px.x - cx
-          ctx.fillRect(Math.min(armX, armX - armW), cy - halfBelt, Math.abs(armW) || (ts / 2), beltW)
+          const fromX = idx > 0 ? edgeR : edgeL
+          const left = Math.min(fromX, cx)
+          ctx.fillRect(left, cy - halfBelt, Math.abs(fromX - cx), beltW)
         } else {
-          const armY = idy > 0 ? px.y + ts : cy
-          const armH = idy > 0 ? cy - (px.y + ts) : px.y - cy
-          ctx.fillRect(cx - halfBelt, Math.min(armY, armY - armH), beltW, Math.abs(armH) || (ts / 2))
+          const fromY = idy > 0 ? edgeB : edgeT
+          const top = Math.min(fromY, cy)
+          ctx.fillRect(cx - halfBelt, top, beltW, Math.abs(fromY - cy))
         }
 
-        // Output arm: from center to edge on outDir side
+        // Output arm: from center to padded edge on outDir side
         if (arm2IsH) {
-          const armX = odx > 0 ? cx : px.x
-          const armW = odx > 0 ? (px.x + ts) - cx : cx - px.x
-          ctx.fillRect(armX, cy - halfBelt, armW, beltW)
+          const toX = odx > 0 ? edgeR : edgeL
+          const left = Math.min(cx, toX)
+          ctx.fillRect(left, cy - halfBelt, Math.abs(toX - cx), beltW)
         } else {
-          const armY = ody > 0 ? cy : px.y
-          const armH = ody > 0 ? (px.y + ts) - cy : cy - px.y
-          ctx.fillRect(cx - halfBelt, armY, beltW, armH)
+          const toY = ody > 0 ? edgeB : edgeT
+          const top = Math.min(cy, toY)
+          ctx.fillRect(cx - halfBelt, top, beltW, Math.abs(toY - cy))
         }
 
         // Center square (fills the junction)
@@ -308,52 +307,51 @@ function drawEntity(
         const gapLen   = ts * 0.18
         const speed    = ts * 0.4
         const offset   = (animTime * speed) % (dashLen + gapLen)
+        const armLen   = ts / 2 - pad  // padded arm length
 
         ctx.strokeStyle = COLORS.conveyorDash
         ctx.lineWidth   = Math.max(1, ts * 0.04)
         ctx.lineCap     = 'round'
 
         // Input arm dashes
-        const inLen = ts / 2
         for (const edge of [-1, 1]) {
           const perpDist = halfBelt * 0.58 * edge
           ctx.beginPath()
           const dStart = -dashLen + offset
-          for (let dd = dStart; dd < inLen; dd += dashLen + gapLen) {
+          for (let dd = dStart; dd < armLen; dd += dashLen + gapLen) {
             const s0 = Math.max(0, dd)
-            const s1 = Math.min(inLen, dd + dashLen)
+            const s1 = Math.min(armLen, dd + dashLen)
             if (s1 <= s0) continue
             if (arm1IsH) {
-              const baseX = idx > 0 ? px.x + ts - inLen : px.x
-              ctx.moveTo(baseX + (idx > 0 ? inLen - s1 : s0), cy + perpDist)
-              ctx.lineTo(baseX + (idx > 0 ? inLen - s0 : s1), cy + perpDist)
+              const baseX = idx > 0 ? edgeR - armLen : edgeL
+              ctx.moveTo(baseX + (idx > 0 ? armLen - s1 : s0), cy + perpDist)
+              ctx.lineTo(baseX + (idx > 0 ? armLen - s0 : s1), cy + perpDist)
             } else {
-              const baseY = idy > 0 ? px.y + ts - inLen : px.y
-              ctx.moveTo(cx + perpDist, baseY + (idy > 0 ? inLen - s1 : s0))
-              ctx.lineTo(cx + perpDist, baseY + (idy > 0 ? inLen - s0 : s1))
+              const baseY = idy > 0 ? edgeB - armLen : edgeT
+              ctx.moveTo(cx + perpDist, baseY + (idy > 0 ? armLen - s1 : s0))
+              ctx.lineTo(cx + perpDist, baseY + (idy > 0 ? armLen - s0 : s1))
             }
           }
           ctx.stroke()
         }
 
         // Output arm dashes
-        const outLen = ts / 2
         for (const edge of [-1, 1]) {
           const perpDist = halfBelt * 0.58 * edge
           ctx.beginPath()
           const dStart = -dashLen + offset
-          for (let dd = dStart; dd < outLen; dd += dashLen + gapLen) {
+          for (let dd = dStart; dd < armLen; dd += dashLen + gapLen) {
             const s0 = Math.max(0, dd)
-            const s1 = Math.min(outLen, dd + dashLen)
+            const s1 = Math.min(armLen, dd + dashLen)
             if (s1 <= s0) continue
             if (arm2IsH) {
-              const baseX = odx > 0 ? cx : px.x
-              ctx.moveTo(baseX + (odx > 0 ? s0 : outLen - s1), cy + perpDist)
-              ctx.lineTo(baseX + (odx > 0 ? s1 : outLen - s0), cy + perpDist)
+              const baseX = odx > 0 ? cx : edgeL
+              ctx.moveTo(baseX + (odx > 0 ? s0 : armLen - s1), cy + perpDist)
+              ctx.lineTo(baseX + (odx > 0 ? s1 : armLen - s0), cy + perpDist)
             } else {
-              const baseY = ody > 0 ? cy : px.y
-              ctx.moveTo(cx + perpDist, baseY + (ody > 0 ? s0 : outLen - s1))
-              ctx.lineTo(cx + perpDist, baseY + (ody > 0 ? s1 : outLen - s0))
+              const baseY = ody > 0 ? cy : edgeT
+              ctx.moveTo(cx + perpDist, baseY + (ody > 0 ? s0 : armLen - s1))
+              ctx.lineTo(cx + perpDist, baseY + (ody > 0 ? s1 : armLen - s0))
             }
           }
           ctx.stroke()
@@ -833,6 +831,7 @@ export function CanvasRenderer() {
       onMouseLeave={handleMouseUp}
       onWheel={handleWheel}
       onContextMenu={handleContextMenu}
+      onAuxClick={e => e.preventDefault()}
       style={{ cursor: dragRef.current ? 'grabbing' : 'crosshair' }}
     />
   )

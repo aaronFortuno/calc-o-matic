@@ -129,6 +129,41 @@ export function createViewport(): Viewport {
   return { offsetX: 0, offsetY: 0, zoom: 1.0 }
 }
 
+/**
+ * Compute a viewport that centers a set of tile positions on screen.
+ * Falls back to default viewport if no positions are given.
+ */
+export function centerViewportOnEntities(
+  positions: { x: number; y: number }[],
+  canvasWidth: number,
+  canvasHeight: number,
+  zoom: number = 1.0,
+): Viewport {
+  if (positions.length === 0) {
+    return { offsetX: canvasWidth / 2, offsetY: canvasHeight / 2, zoom }
+  }
+
+  let minX = Infinity, maxX = -Infinity
+  let minY = Infinity, maxY = -Infinity
+  for (const p of positions) {
+    if (p.x < minX) minX = p.x
+    if (p.x > maxX) maxX = p.x
+    if (p.y < minY) minY = p.y
+    if (p.y > maxY) maxY = p.y
+  }
+
+  // Center of the bounding box in tile-space (+1 for tile width)
+  const centerTileX = (minX + maxX + 1) / 2
+  const centerTileY = (minY + maxY + 1) / 2
+  const ts = TILE_SIZE * zoom
+
+  return {
+    zoom,
+    offsetX: canvasWidth / 2 - centerTileX * ts,
+    offsetY: canvasHeight / 2 - centerTileY * ts,
+  }
+}
+
 export function panViewport(
   viewport: Viewport,
   dx: number,
